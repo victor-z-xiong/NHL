@@ -12,9 +12,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import com.android.volley.*;
+
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.google.gson.JsonObject;
+
+import org.json.JSONObject;
 
 public class ScoreBoard extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    private static final String url = "https://statsapi.web.nhl.com/api/v1/schedule";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +38,21 @@ public class ScoreBoard extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        GetScoresREST.getScores();
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                System.out.println(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                System.out.println("Something is wrong");
+                error.printStackTrace();
+            }
+        });
+
+
+        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);

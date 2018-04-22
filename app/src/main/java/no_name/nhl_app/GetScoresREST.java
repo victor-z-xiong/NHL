@@ -4,53 +4,58 @@ package no_name.nhl_app;
  * Created by user on 2018-04-20.
  */
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import com.google.gson.*;
-import com.google.gson.stream.JsonReader;
+import android.app.Application;
+import android.text.TextUtils;
 
-import org.json.JSONObject;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 
-public class GetScoresREST {
-    public static void getScores() {
+import java.util.HashMap;
+import java.util.Map;
 
-        try {
-            
-            URL url = new URL("https://statsapi.web.nhl.com/api/v1/schedule");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Accept", "application/json");
+public class GetScoresREST extends Application{
 
-            if (conn.getResponseCode() != 200) {
-                throw new RuntimeException("Failed : HTTP error code : "
-                        + conn.getResponseCode());
-            }
+    private static GetScoresREST mInstance;
+    private static RequestQueue mRequestQueue;
+    private static String TAG = "DEFAULT";
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(
-                    (conn.getInputStream())));
+    @Override
+    public void onCreate() {
+        super.onCreate();
 
-            String output, jsonString;
+        mInstance = this;
+    }
 
-            JsonParser parser = new JsonParser();
-            JsonArray array = parser.parse(br).getAsJsonArray();
+    public static synchronized GetScoresREST getInstance(){
+        return mInstance;
+    }
 
-            System.out.println(array.size());
-
-            conn.disconnect();
-
-        } catch (MalformedURLException e) {
-
-            e.printStackTrace();
-
-        } catch (IOException e) {
-
-            e.printStackTrace();
-
+    public RequestQueue getRequestQueue() {
+        if(mRequestQueue == null)
+        {
+            mRequestQueue = Volley.newRequestQueue(this.getApplicationContext());
         }
 
+        return mRequestQueue;
+    }
+
+    public <T> void addToRequestQueue(Request<T> request, String tag) {
+        request.setTag(TextUtils.isEmpty(tag) ? TAG : tag);
+        getRequestQueue().add(request);
+    }
+
+    public <T> void addToRequestQueue(Request<T> request) {
+        request.setTag(TAG);
+        getRequestQueue().add(request);
+    }
+
+    public void cancelPendingRequest(Object tag) {
+        if(mRequestQueue != null) {
+            mRequestQueue.cancelAll(tag);
+        }
     }
 }
