@@ -12,19 +12,35 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
 import com.android.volley.*;
 
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.google.gson.JsonObject;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
+import java.util.Date;
+import java.util.TimeZone;
 
 public class ScoreBoard extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String url = "https://statsapi.web.nhl.com/api/v1/schedule";
-
+    private static ScoreBoard scoreBoardInstance;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,7 +57,9 @@ public class ScoreBoard extends AppCompatActivity
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                System.out.println(response);
+
+                addTextToLinearLayout(response);
+
             }
         }, new Response.ErrorListener() {
             @Override
@@ -54,8 +72,72 @@ public class ScoreBoard extends AppCompatActivity
 
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
 
+
+
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    public void addTextToLinearLayout(JSONObject response){
+        try {
+            TextView copyRight = (TextView) findViewById(R.id.copyrightID);
+            String toDisplay = response.getString("copyright");
+            int totalGames = response.getInt("totalGames");
+
+            final TextView[] myTextViews = new TextView[totalGames*2];
+            TextView tv;
+
+            LinearLayout ll = (LinearLayout) findViewById(R.id.scoreboard_linear_layout);
+            //setContentView(R.layout.content_score_board);
+            for(int i = 0; i < totalGames*2; i++){
+                tv = new TextView(this);
+                JSONArray dates = response.getJSONArray("dates");
+                JSONObject elem = null;
+                JSONArray games = null;
+                if(dates != null)
+                    elem = dates.getJSONObject(0);
+
+                if(elem != null)
+                    games = elem.getJSONArray("games");
+
+                String teamType = "away";
+                String team = "";
+                String gameTime = "";
+                String gameDate = "";
+                int score = 0;
+                if(i % 2 == 0)
+                    teamType = "home";
+
+                if(games != null) {
+                    gameDate = games.getJSONObject(i / 2).getString("gameDate");
+                    team = games.getJSONObject(i / 2).getJSONObject("teams").getJSONObject(teamType).getJSONObject("team").getString("name");
+                    score = games.getJSONObject(i / 2).getJSONObject("teams").getJSONObject(teamType).getInt("score");
+                }
+
+                try {
+                    DateFormat dfPST = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                    dfPST.setTimeZone(TimeZone.getTimeZone("America/Los_Angeles"));
+                    Date date = dfPST.parse(gameDate);
+                    if(i % 2 == 0)
+                        gameTime = dfPST.format(date).toString();
+                } catch (ParseException e){
+                    System.out.println("bad");
+                }
+
+
+                tv.setText(team + ": " + score+ "        " + gameTime);
+                tv.setId(17+i);
+                ll.addView(tv);
+
+                myTextViews[i] = tv;
+
+            }
+
+            copyRight.setText(toDisplay);
+        } catch (JSONException e){
+            System.out.println("UNEXPECTED JSON EXCEPTION!");
+        }
+
     }
 
     @Override

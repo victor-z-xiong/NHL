@@ -8,13 +8,34 @@
     tools:context="no_name.nhl_app.ScoreBoard"
     tools:showIn="@layout/app_bar_score_board">
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="506dp"
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="33dp"
+        tools:layout_editor_absoluteY="5dp">
+
+        <LinearLayout
+            android:id="@+id/scoreboard_linear_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+
+        </LinearLayout>
+    </ScrollView>
+
     <TextView
+        android:id="@+id/copyrightID"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="FIVE"
+        android:text="@string/five"
+        android:textSize="10sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 </android.support.constraint.ConstraintLayout>
