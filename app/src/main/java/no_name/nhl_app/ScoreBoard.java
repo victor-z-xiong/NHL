@@ -1,5 +1,6 @@
 package no_name.nhl_app;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -12,9 +13,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.*;
 
@@ -40,8 +44,9 @@ import java.util.TimeZone;
 public class ScoreBoard extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    private static final String url = "https://statsapi.web.nhl.com/api/v1/schedule?date=2018-04-23";
-    private static ScoreBoard scoreBoardInstance;
+    private String customDate = null;
+    private EditText dateEditor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +59,22 @@ public class ScoreBoard extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+
+        customDate = getIntent().getExtras() == null ? "" : getIntent().getExtras().getString("CUSTOM_DATE");
+        String url = "https://statsapi.web.nhl.com/api/v1/schedule" + customDate;
+
+        Button button = (Button) findViewById(R.id.button_enter_date);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getApplicationContext(), "It's magic", Toast.LENGTH_SHORT).show();
+                dateEditor = (EditText) findViewById(R.id.date_editor);
+                customDate = "?date=" + dateEditor.getText().toString();
+                Intent intent = new Intent(getApplicationContext(), ScoreBoard.class);
+                intent.putExtra("CUSTOM_DATE", customDate);
+                startActivity(intent);
+            }
+        });
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
@@ -73,11 +94,10 @@ public class ScoreBoard extends AppCompatActivity
 
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
 
-
-
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
+
 
     public void addTextToLinearLayout(JSONObject response){
         try {
@@ -87,6 +107,10 @@ public class ScoreBoard extends AppCompatActivity
 
 
             LinearLayout ll = (LinearLayout) findViewById(R.id.scoreboard_linear_layout);
+
+            if(totalGames == 0){
+                displayNoGamesMsg(ll);
+            }
 
             for(int i = 0; i < totalGames*2; i++){
 
@@ -110,7 +134,7 @@ public class ScoreBoard extends AppCompatActivity
                 scoreText.setText(Integer.toString(score));
                 scoreText.setId(3*i+1);
                 scoreText.setTextSize(24);
-                scoreText.setPadding(0, 20, 100, 0);
+                scoreText.setPadding(0, 20, 200, 0);
 
 
                 llForRow.addView(teamName);
@@ -141,6 +165,14 @@ public class ScoreBoard extends AppCompatActivity
             System.out.println("UNEXPECTED JSON EXCEPTION!");
         }
 
+    }
+
+    private void displayNoGamesMsg(LinearLayout ll){
+        TextView msg = new TextView(this);
+        msg.setText("No games on this date");
+        msg.setPadding(250, 600, 0, 0);
+        msg.setTextSize(24);
+        ll.addView(msg);
     }
     private JSONArray getGame(JSONObject response){
         try{
