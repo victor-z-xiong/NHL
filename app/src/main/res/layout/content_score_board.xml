@@ -8,82 +8,89 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="no_name.nhl_app.ScoreBoard"
     tools:showIn="@layout/app_bar_score_board">
-
-    <LinearLayout
+    <android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/swipelayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        tools:context="exceptionbound.com.swipelayoutrefresh.ScoreBoard">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <ImageView
-                android:id="@+id/go_back_date"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1.0"
-                android:scaleType="fitCenter"
-                android:src="@drawable/reply" />
-
-            <TextView
-                android:id="@+id/date_editor"
-                android:layout_width="293dp"
-                android:layout_height="wrap_content"
-                android:layout_alignBottom="@+id/go_back_date"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
-                android:layout_marginLeft="11dp"
-                android:layout_marginStart="11dp"
-                android:layout_weight="1.0"
-                android:ems="10"
-                android:gravity="center"
-                android:inputType="textPersonName"
-                android:text="yyyy-mm-dd"
-                android:textSize="18sp"
-                tools:layout_editor_absoluteX="34dp"
-                tools:layout_editor_absoluteY="0dp" />
-
-            <ImageView
-                android:id="@+id/go_fwd_date"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1.0"
-                android:scaleType="fitCenter"
-                android:src="@drawable/forward_arrow" />
-
-        </LinearLayout>
-
-        <ScrollView
-            android:id="@+id/main_sroll_view"
-            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            tools:layout_editor_absoluteX="0dp"
-            tools:layout_editor_absoluteY="42dp">
+            android:orientation="vertical">
 
             <LinearLayout
-                android:id="@+id/scoreboard_linear_layout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:layout_height="wrap_content">
 
+                <ImageView
+                    android:id="@+id/go_back_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1.0"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/reply" />
+
+                <TextView
+                    android:id="@+id/date_editor"
+                    android:layout_width="293dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBottom="@+id/go_back_date"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginLeft="11dp"
+                    android:layout_marginStart="11dp"
+                    android:layout_weight="1.0"
+                    android:ems="10"
+                    android:gravity="center"
+                    android:inputType="textPersonName"
+                    android:text="yyyy-mm-dd"
+                    android:textSize="18sp"
+                    tools:layout_editor_absoluteX="34dp"
+                    tools:layout_editor_absoluteY="0dp" />
+
+                <ImageView
+                    android:id="@+id/go_fwd_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1.0"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/forward_arrow" />
 
             </LinearLayout>
-        </ScrollView>
 
-        <TextView
-            android:id="@+id/copyrightID"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/five"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0" />
-    </LinearLayout>
+            <ScrollView
+                android:id="@+id/main_sroll_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                tools:layout_editor_absoluteX="0dp"
+                tools:layout_editor_absoluteY="42dp">
+
+                <LinearLayout
+                    android:id="@+id/scoreboard_linear_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+
+                </LinearLayout>
+            </ScrollView>
+
+            <TextView
+                android:id="@+id/copyrightID"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/five"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1.0" />
+        </LinearLayout>
+    </android.support.v4.widget.SwipeRefreshLayout>
 </android.support.constraint.ConstraintLayout>
