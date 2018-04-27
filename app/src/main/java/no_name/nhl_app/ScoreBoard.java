@@ -32,6 +32,7 @@ import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -41,9 +42,13 @@ public class ScoreBoard extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private String customDate = null;
-    TextView scoreDate;
+    TextView scoreDate, gameTimeText;
     Calendar mCurrentDate;
     int day, month, year;
+    String currentPeriod = "";
+    String periodTimeRemaining = "";
+    ArrayList<Integer> idTags = new ArrayList<Integer>();
+    int count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,14 +147,14 @@ public class ScoreBoard extends AppCompatActivity
                 displayNoGamesMsg(ll);
             }
 
-            for(int i = 0; i < totalGames*2; i++){
+            for(int i = totalGames*2-1; i >=0 ; i--){
 
                 JSONArray games = getGame(response);
                 int score = getScore(i, games);
                 String team = getTeamName(i, games);
                 String gameTime = setGameTime(getGameDate(i, games), i);
 
-                makeGameScoreTable(ll, score, team, gameTime, i);
+                makeGameScoreTable(ll, score, team, gameTime, i, games);
 
             }
 
@@ -160,7 +165,7 @@ public class ScoreBoard extends AppCompatActivity
 
     }
 
-    private void makeGameScoreTable(LinearLayout ll, int score, String team, String gameTime, int i){
+    private void makeGameScoreTable(LinearLayout ll, int score, String team, String gameTime, int i, JSONArray games){
         TableRow row = new TableRow(this);
         LinearLayout llForRow = new LinearLayout(this);
         android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(
@@ -184,12 +189,41 @@ public class ScoreBoard extends AppCompatActivity
         row.addView(llForRow);
 
         ll.addView(row);
-        if(i % 2 == 1){
+        if(i % 2 == 0){
             TableRow gameTimeRow = new TableRow(this);
             TableRow spacerRow = new TableRow(this);
-            TextView gameTimeText = new TextView(this);
+            gameTimeText = new TextView(this);
             TextView blankView = new TextView(this);
-            gameTimeText.setText(gameTime);
+
+            String gameState = getAbstractGameState(i, games);
+            switch(gameState){
+                case "Preview":
+                    gameTimeText.setText(gameTime);
+                    break;
+
+                case "Live":
+                    setLiveGameStateTimePeriod(new VolleyCallback() {
+                        @Override
+                        public void onSuccess(String result, int idTag) {
+                            gameTimeText = findViewById(idTag);
+                            gameTimeText.setText(result);
+                        }
+                    }, i, games);
+
+                    break;
+                default:
+                    gameTimeText.setText("Final");
+            }
+
+            /*
+            setLiveGameStateTimePeriod(new VolleyCallback() {
+                @Override
+                public void onSuccess(String result, int idTag) {
+                    gameTimeText = findViewById(idTag);
+                    gameTimeText.setText(result);
+                }
+            }, i, games);
+            */
             gameTimeText.setId(3*i+2);
             gameTimeText.setTextSize(18);
             gameTimeText.setPadding(50, 0, 0, 0);
@@ -201,6 +235,54 @@ public class ScoreBoard extends AppCompatActivity
         }
     }
 
+    private void setLGSTHelper(JSONObject response){
+
+        try{
+            JSONObject liveData = response.getJSONObject("liveData");
+            JSONObject linescore = liveData.getJSONObject("linescore");
+            periodTimeRemaining = linescore.getString("currentPeriodTimeRemaining");
+            currentPeriod = linescore.getString("currentPeriodOrdinal");
+
+        } catch(JSONException e){
+            System.out.println("UNEXPECTED JSON EXCEPTION");
+        }
+    }
+
+    private String getCurrentPeriod(){
+        return currentPeriod;
+    }
+
+    private String getPeriodTimeRemaining(){
+        return periodTimeRemaining;
+    }
+
+    public interface VolleyCallback{
+        void onSuccess(String result, int idTag);
+    }
+
+    private void setLiveGameStateTimePeriod(final VolleyCallback callback, int i, JSONArray games){
+        String url = getLiveGameFeedAndStatsLink(i, games);
+        idTags.add(3*i+2);
+        count++;
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                setLGSTHelper(response);
+                count--;
+                callback.onSuccess(getPeriodTimeRemaining() + " " + getCurrentPeriod(), idTags.get(count));
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                System.out.println("Something is wrong");
+                error.printStackTrace();
+            }
+        });
+
+
+        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
+    }
+
     private void displayNoGamesMsg(LinearLayout ll){
         TextView msg = new TextView(this);
         msg.setText("No games on this date");
@@ -208,6 +290,19 @@ public class ScoreBoard extends AppCompatActivity
         msg.setTextSize(24);
         ll.addView(msg);
     }
+
+    private String getLiveGameFeedAndStatsLink(int i, JSONArray games){
+        String gameLink = "";
+        if(games != null) {
+            try {
+                gameLink = games.getJSONObject(i / 2).getString("link");
+            } catch (JSONException e) {
+                System.out.println("UNEXPECTED JSON EXCEPTION!");
+            }
+        }
+        return "https://statsapi.web.nhl.com" + gameLink;
+    }
+
     private JSONArray getGame(JSONObject response){
         try{
             JSONArray dates = response.getJSONArray("dates");
@@ -226,6 +321,19 @@ public class ScoreBoard extends AppCompatActivity
 
         return null;
     }
+
+    private String getAbstractGameState(int i, JSONArray games){
+        String gameState = "";
+        if(games != null) {
+            try {
+                gameState = games.getJSONObject(i / 2).getJSONObject("status").getString("abstractGameState");
+            } catch (JSONException e) {
+                System.out.println("UNEXPECTED JSON EXCEPTION!");
+            }
+        }
+        return gameState;
+    }
+
     private int getScore(int i, JSONArray games){
         int score = 0;
         String teamType = "away";
@@ -270,8 +378,8 @@ public class ScoreBoard extends AppCompatActivity
 
     private String formatGameTime(String gameTime){
         String hour = gameTime.substring(11,13);
-        if(Integer.parseInt(hour) > 12){
-            hour = Integer.toString(Integer.parseInt(hour) - 12);
+        if(Integer.parseInt(hour) >= 12){
+            hour = Integer.parseInt(hour) == 12? Integer.toString(12) : Integer.toString(Integer.parseInt(hour) - 12);
             return hour + gameTime.substring(13,16) + "PM PST";
         }
         return hour + gameTime.substring(13,16) + "AM PST";
