@@ -149,44 +149,7 @@ public class ScoreBoard extends AppCompatActivity
                 String team = getTeamName(i, games);
                 String gameTime = setGameTime(getGameDate(i, games), i);
 
-                TableRow row = new TableRow(this);
-                LinearLayout llForRow = new LinearLayout(this);
-                android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-
-                TextView teamName = new TextView(this);
-                TextView scoreText = new TextView(this);
-                teamName.setText(team);
-                teamName.setId(3*i);
-                teamName.setTextSize(24);
-                teamName.setLayoutParams(params);
-                teamName.setPadding(50, 20, 0, 0);
-                scoreText.setText(Integer.toString(score));
-                scoreText.setId(3*i+1);
-                scoreText.setTextSize(24);
-                scoreText.setPadding(0, 20, 200, 0);
-
-
-                llForRow.addView(teamName);
-                llForRow.addView(scoreText);
-                row.addView(llForRow);
-
-                ll.addView(row);
-                if(i % 2 == 1){
-                    TableRow gameTimeRow = new TableRow(this);
-                    TableRow spacerRow = new TableRow(this);
-                    TextView gameTimeText = new TextView(this);
-                    TextView blankView = new TextView(this);
-                    gameTimeText.setText(gameTime);
-                    gameTimeText.setId(3*i+2);
-                    gameTimeText.setTextSize(18);
-                    gameTimeText.setPadding(50, 0, 0, 0);
-
-                    spacerRow.addView(blankView);
-                    gameTimeRow.addView(gameTimeText);
-                    ll.addView(gameTimeRow);
-                    ll.addView(spacerRow);
-                }
+                makeGameScoreTable(ll, score, team, gameTime, i);
 
             }
 
@@ -195,6 +158,47 @@ public class ScoreBoard extends AppCompatActivity
             System.out.println("UNEXPECTED JSON EXCEPTION!");
         }
 
+    }
+
+    private void makeGameScoreTable(LinearLayout ll, int score, String team, String gameTime, int i){
+        TableRow row = new TableRow(this);
+        LinearLayout llForRow = new LinearLayout(this);
+        android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+
+        TextView teamName = new TextView(this);
+        TextView scoreText = new TextView(this);
+        teamName.setText(team);
+        teamName.setId(3*i);
+        teamName.setTextSize(24);
+        teamName.setLayoutParams(params);
+        teamName.setPadding(50, 20, 0, 0);
+        scoreText.setText(Integer.toString(score));
+        scoreText.setId(3*i+1);
+        scoreText.setTextSize(24);
+        scoreText.setPadding(0, 20, 200, 0);
+
+
+        llForRow.addView(teamName);
+        llForRow.addView(scoreText);
+        row.addView(llForRow);
+
+        ll.addView(row);
+        if(i % 2 == 1){
+            TableRow gameTimeRow = new TableRow(this);
+            TableRow spacerRow = new TableRow(this);
+            TextView gameTimeText = new TextView(this);
+            TextView blankView = new TextView(this);
+            gameTimeText.setText(gameTime);
+            gameTimeText.setId(3*i+2);
+            gameTimeText.setTextSize(18);
+            gameTimeText.setPadding(50, 0, 0, 0);
+
+            spacerRow.addView(blankView);
+            gameTimeRow.addView(gameTimeText);
+            ll.addView(gameTimeRow);
+            ll.addView(spacerRow);
+        }
     }
 
     private void displayNoGamesMsg(LinearLayout ll){
