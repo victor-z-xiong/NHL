@@ -1,5 +1,6 @@
 package no_name.nhl_app;
 
+import android.app.ActionBar;
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,9 +18,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
@@ -42,6 +45,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.lang.String;
 
 public class ScoreBoard extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -54,6 +58,7 @@ public class ScoreBoard extends AppCompatActivity
     String periodTimeRemaining = "";
     ArrayList<Integer> idTags = new ArrayList<Integer>();
     int count = 0;
+    ImageView goBackOneD, goFwdOneD;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +77,8 @@ public class ScoreBoard extends AppCompatActivity
         String url = "https://statsapi.web.nhl.com/api/v1/schedule" + customDate;
 
         scoreDate = (TextView) findViewById(R.id.date_editor);
+        goBackOneD = (ImageView) findViewById(R.id.go_back_date);
+        goFwdOneD = (ImageView) findViewById(R.id.go_fwd_date);
 
         mCurrentDate = Calendar.getInstance();
 
@@ -85,92 +92,7 @@ public class ScoreBoard extends AppCompatActivity
         year = getIntent().getExtras() == null ? mCurrentDate.get(Calendar.YEAR) : Integer.parseInt(customDate.substring(6,10));
 
         month = getIntent().getExtras() == null ? month + 1 : month;
-        scoreDate.setText("Scores for "+ dayOfWeek+ ", " +monthString+ " " + day+" " +year);
-
-        ScrollView dateEditor = (ScrollView) findViewById(R.id.main_sroll_view);
-        dateEditor.setOnTouchListener(new OnSwipeTouchListener(ScoreBoard.this) {
-            public void onSwipeRight() {
-                switch(month){
-                    case 2:
-                        if(year % 4 == 0){
-                            month = day == 29? month+1 : month;
-                            day = day == 29? 1: day + 1;
-                        }else{
-                            month = day == 28? month+1 : month;
-                            day = day == 28? 1: day + 1;
-                        }
-                        break;
-                    case 4:
-                        month = day == 30? month+1 : month;
-                        day = day == 30? 1: day+1;
-                        break;
-                    case 6:
-                        month = day == 30? month+1 : month;
-                        day = day == 30? 1: day+1;
-                        break;
-                    case 9:
-                        month = day == 30? month+1 : month;
-                        day = day == 30? 1: day+1;
-                        break;
-                    case 11:
-                        month = day == 30? month+1 : month;
-                        day = day == 30? 1: day+1;
-                        break;
-                    case 12:
-                        month = day == 31? 1 : month;
-                        day = day == 31? 1: day + 1;
-                        break;
-                    default:
-                        month = day == 31? month+1 : month;
-                        day = day == 31? 1: day+1;
-                        break;
-                }
-                setDate((month == 1 && day == 1)? year + 1: year, month, day);
-            }
-            public void onSwipeLeft() {
-                switch(month){
-                    case 1:
-                        month = day == 1? 12: month;
-                        day = day == 1? 31: day -1;
-                        break;
-                    case 2:
-                        month = day == 1? month-1 : month;
-                        day = day == 1? 31: day-1;
-                        break;
-                    case 4:
-                        month = day == 1? month-1 : month;
-                        day = day == 1? 31: day-1;
-                        break;
-                    case 6:
-                        month = day == 1? month-1 : month;
-                        day = day == 1? 31: day-1;
-                        break;
-                    case 9:
-                        month = day == 1? month-1 : month;
-                        day = day == 1? 31: day-1;
-                        break;
-                    case 11:
-                        month = day == 1? month-1 : month;
-                        day = day == 1? 31: day-1;
-                        break;
-                    case 3:
-                        if(year % 4 == 0){
-                            month = day == 1? month-1 : month;
-                            day = day == 1? 29: day-1;
-                        }else{
-                            month = day == 1? month-1 : month;
-                            day = day == 1? 28: day-1;
-                        }
-                        break;
-                    default:
-                        month = day == 1? month-1 : month;
-                        day = day == 1? 30: day-1;
-                        break;
-                }
-                setDate((month == 12 && day == 31)? year - 1 : year, month, day);
-            }
-
-        });
+        scoreDate.setText(dayOfWeek+ ", " +monthString+ " " + day+" " +year);
 
         scoreDate.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -183,6 +105,20 @@ public class ScoreBoard extends AppCompatActivity
                     }
                 }, year, month-1, day);
                 datePickerDialog.show();
+            }
+        });
+
+        goBackOneD.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                goBackOneDay();
+            }
+        });
+
+        goFwdOneD.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                goFwdOneDay();
             }
         });
 
@@ -234,7 +170,6 @@ public class ScoreBoard extends AppCompatActivity
             String toDisplay = response.getString("copyright");
             int totalGames = response.getInt("totalGames");
 
-
             LinearLayout ll = (LinearLayout) findViewById(R.id.scoreboard_linear_layout);
 
             if(totalGames == 0){
@@ -244,7 +179,7 @@ public class ScoreBoard extends AppCompatActivity
             for(int i = totalGames*2-1; i >=0 ; i--){
 
                 JSONArray games = getGame(response);
-                int score = getScore(i, games);
+                String score = getScore(i, games);
                 String team = getTeamName(i, games);
                 String gameTime = setGameTime(getGameDate(i, games), i);
 
@@ -259,25 +194,42 @@ public class ScoreBoard extends AppCompatActivity
 
     }
 
-    private void makeGameScoreTable(LinearLayout ll, int score, String team, String gameTime, int i, JSONArray games){
+    private void makeGameScoreTable(LinearLayout ll, String score, String team, String gameTime, int i, JSONArray games){
         TableRow row = new TableRow(this);
         LinearLayout llForRow = new LinearLayout(this);
         android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, 1f);
 
         TextView teamName = new TextView(this);
         TextView scoreText = new TextView(this);
+        ImageView teamLogo = new ImageView(this);
+
+        String teamLogoFileName = team.toLowerCase();
+        teamLogoFileName = teamLogoFileName.replace(" ", "_");
+        teamLogoFileName = teamLogoFileName.replace("é", "e");
+        teamLogoFileName = teamLogoFileName.replace(".", "");
+        int drawableID = getResources().getIdentifier(teamLogoFileName, "drawable", getPackageName());
+        teamLogo.setImageResource(drawableID);
+        teamLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        teamLogo.setLayoutParams(new LinearLayout.LayoutParams(250,LinearLayout.LayoutParams.MATCH_PARENT));
+        teamLogo.setPadding(0,20,0,10);
+
         teamName.setText(team);
         teamName.setId(3*i);
-        teamName.setTextSize(24);
+        teamName.setTextSize(20);
         teamName.setLayoutParams(params);
         teamName.setPadding(50, 20, 0, 0);
-        scoreText.setText(Integer.toString(score));
+
+        String gameState = getAbstractGameState(i, games);
+        if(gameState.equals("Preview")){
+            score = " ---";
+        }
+        scoreText.setText(score);
         scoreText.setId(3*i+1);
         scoreText.setTextSize(24);
-        scoreText.setPadding(0, 20, 200, 0);
+        scoreText.setPadding(0, 20, 150, 0);
 
-
+        llForRow.addView(teamLogo);
         llForRow.addView(teamName);
         llForRow.addView(scoreText);
         row.addView(llForRow);
@@ -289,7 +241,6 @@ public class ScoreBoard extends AppCompatActivity
             gameTimeText = new TextView(this);
             TextView blankView = new TextView(this);
 
-            String gameState = getAbstractGameState(i, games);
             switch(gameState){
                 case "Preview":
                     gameTimeText.setText(gameTime);
@@ -320,7 +271,7 @@ public class ScoreBoard extends AppCompatActivity
             */
             gameTimeText.setId(3*i+2);
             gameTimeText.setTextSize(18);
-            gameTimeText.setPadding(50, 0, 0, 0);
+            gameTimeText.setPadding(50+250, 0, 0, 0);
 
             spacerRow.addView(blankView);
             gameTimeRow.addView(gameTimeText);
@@ -428,14 +379,14 @@ public class ScoreBoard extends AppCompatActivity
         return gameState;
     }
 
-    private int getScore(int i, JSONArray games){
-        int score = 0;
+    private String getScore(int i, JSONArray games){
+        String score = "-";
         String teamType = "away";
         if(i % 2 == 0)
             teamType = "home";
         if(games != null) {
             try {
-                score = games.getJSONObject(i / 2).getJSONObject("teams").getJSONObject(teamType).getInt("score");
+                score = Integer.toString(games.getJSONObject(i / 2).getJSONObject("teams").getJSONObject(teamType).getInt("score"));
             } catch (JSONException e) {
                 System.out.println("UNEXPECTED JSON EXCEPTION!");
             }
@@ -496,6 +447,88 @@ public class ScoreBoard extends AppCompatActivity
             return formatGameTime(gameTime);
         }
         return gameTime;
+    }
+
+    private void goFwdOneDay() {
+        switch(month){
+            case 2:
+                if(year % 4 == 0){
+                    month = day == 29? month+1 : month;
+                    day = day == 29? 1: day + 1;
+                }else{
+                    month = day == 28? month+1 : month;
+                    day = day == 28? 1: day + 1;
+                }
+                break;
+            case 4:
+                month = day == 30? month+1 : month;
+                day = day == 30? 1: day+1;
+                break;
+            case 6:
+                month = day == 30? month+1 : month;
+                day = day == 30? 1: day+1;
+                break;
+            case 9:
+                month = day == 30? month+1 : month;
+                day = day == 30? 1: day+1;
+                break;
+            case 11:
+                month = day == 30? month+1 : month;
+                day = day == 30? 1: day+1;
+                break;
+            case 12:
+                month = day == 31? 1 : month;
+                day = day == 31? 1: day + 1;
+                break;
+            default:
+                month = day == 31? month+1 : month;
+                day = day == 31? 1: day+1;
+                break;
+        }
+        setDate((month == 1 && day == 1)? year + 1: year, month, day);
+    }
+
+    private void goBackOneDay() {
+        switch(month){
+            case 1:
+                month = day == 1? 12: month;
+                day = day == 1? 31: day -1;
+                break;
+            case 2:
+                month = day == 1? month-1 : month;
+                day = day == 1? 31: day-1;
+                break;
+            case 4:
+                month = day == 1? month-1 : month;
+                day = day == 1? 31: day-1;
+                break;
+            case 6:
+                month = day == 1? month-1 : month;
+                day = day == 1? 31: day-1;
+                break;
+            case 9:
+                month = day == 1? month-1 : month;
+                day = day == 1? 31: day-1;
+                break;
+            case 11:
+                month = day == 1? month-1 : month;
+                day = day == 1? 31: day-1;
+                break;
+            case 3:
+                if(year % 4 == 0){
+                    month = day == 1? month-1 : month;
+                    day = day == 1? 29: day-1;
+                }else{
+                    month = day == 1? month-1 : month;
+                    day = day == 1? 28: day-1;
+                }
+                break;
+            default:
+                month = day == 1? month-1 : month;
+                day = day == 1? 30: day-1;
+                break;
+        }
+        setDate((month == 12 && day == 31)? year - 1 : year, month, day);
     }
 
     @Override
