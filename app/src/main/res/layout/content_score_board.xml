@@ -33,6 +33,7 @@
         </LinearLayout>
 
         <ScrollView
+            android:id="@+id/main_sroll_view"
             android:layout_width="380dp"
             android:layout_height="448dp"
             android:orientation="vertical"

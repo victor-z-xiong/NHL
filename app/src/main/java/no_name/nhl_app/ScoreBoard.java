@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -18,6 +21,8 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -82,6 +87,91 @@ public class ScoreBoard extends AppCompatActivity
         month = getIntent().getExtras() == null ? month + 1 : month;
         scoreDate.setText("Scores for "+ dayOfWeek+ ", " +monthString+ " " + day+" " +year);
 
+        ScrollView dateEditor = (ScrollView) findViewById(R.id.main_sroll_view);
+        dateEditor.setOnTouchListener(new OnSwipeTouchListener(ScoreBoard.this) {
+            public void onSwipeRight() {
+                switch(month){
+                    case 2:
+                        if(year % 4 == 0){
+                            month = day == 29? month+1 : month;
+                            day = day == 29? 1: day + 1;
+                        }else{
+                            month = day == 28? month+1 : month;
+                            day = day == 28? 1: day + 1;
+                        }
+                        break;
+                    case 4:
+                        month = day == 30? month+1 : month;
+                        day = day == 30? 1: day+1;
+                        break;
+                    case 6:
+                        month = day == 30? month+1 : month;
+                        day = day == 30? 1: day+1;
+                        break;
+                    case 9:
+                        month = day == 30? month+1 : month;
+                        day = day == 30? 1: day+1;
+                        break;
+                    case 11:
+                        month = day == 30? month+1 : month;
+                        day = day == 30? 1: day+1;
+                        break;
+                    case 12:
+                        month = day == 31? 1 : month;
+                        day = day == 31? 1: day + 1;
+                        break;
+                    default:
+                        month = day == 31? month+1 : month;
+                        day = day == 31? 1: day+1;
+                        break;
+                }
+                setDate((month == 1 && day == 1)? year + 1: year, month, day);
+            }
+            public void onSwipeLeft() {
+                switch(month){
+                    case 1:
+                        month = day == 1? 12: month;
+                        day = day == 1? 31: day -1;
+                        break;
+                    case 2:
+                        month = day == 1? month-1 : month;
+                        day = day == 1? 31: day-1;
+                        break;
+                    case 4:
+                        month = day == 1? month-1 : month;
+                        day = day == 1? 31: day-1;
+                        break;
+                    case 6:
+                        month = day == 1? month-1 : month;
+                        day = day == 1? 31: day-1;
+                        break;
+                    case 9:
+                        month = day == 1? month-1 : month;
+                        day = day == 1? 31: day-1;
+                        break;
+                    case 11:
+                        month = day == 1? month-1 : month;
+                        day = day == 1? 31: day-1;
+                        break;
+                    case 3:
+                        if(year % 4 == 0){
+                            month = day == 1? month-1 : month;
+                            day = day == 1? 29: day-1;
+                        }else{
+                            month = day == 1? month-1 : month;
+                            day = day == 1? 28: day-1;
+                        }
+                        break;
+                    default:
+                        month = day == 1? month-1 : month;
+                        day = day == 1? 30: day-1;
+                        break;
+                }
+                setDate((month == 12 && day == 31)? year - 1 : year, month, day);
+            }
+
+        });
+
         scoreDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -89,23 +179,7 @@ public class ScoreBoard extends AppCompatActivity
                     @Override
                     public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
                         monthOfYear = monthOfYear+1;
-                        String customMonth = monthOfYear < 10 ? "0"+Integer.toString(monthOfYear) : Integer.toString(monthOfYear);
-                        String customDay = dayOfMonth < 10 ? "0"+Integer.toString(dayOfMonth) : Integer.toString(dayOfMonth);
-
-                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE");
-                        SimpleDateFormat monthDateFormat = new SimpleDateFormat("MMM");
-                        Date date = new Date(year, dayOfMonth < 2? monthOfYear : monthOfYear-1, dayOfMonth-1);
-                        String dayOfWeek = simpleDateFormat.format(date);
-                        String monthString = monthDateFormat.format(date);
-                        customDate = "?date="+year+"-"+customMonth+"-"+customDay;
-
-                        Intent intent = new Intent(getApplicationContext(), ScoreBoard.class);
-                        Bundle extras = new Bundle();
-                        extras.putString("CUSTOM_DATE", customDate);
-                        extras.putString("DAY_OF_WEEK", dayOfWeek);
-                        extras.putString("MONTH_STRING", monthString);
-                        intent.putExtras(extras);
-                        startActivity(intent);
+                        setDate(year, monthOfYear, dayOfMonth);
                     }
                 }, year, month-1, day);
                 datePickerDialog.show();
@@ -132,6 +206,26 @@ public class ScoreBoard extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    private void setDate(int year, int monthOfYear, int dayOfMonth){
+        String customMonth = monthOfYear < 10 ? "0"+Integer.toString(monthOfYear) : Integer.toString(monthOfYear);
+        String customDay = dayOfMonth < 10 ? "0"+Integer.toString(dayOfMonth) : Integer.toString(dayOfMonth);
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE");
+        SimpleDateFormat monthDateFormat = new SimpleDateFormat("MMM");
+        Date date = new Date(year, dayOfMonth < 2? monthOfYear : monthOfYear-1, dayOfMonth-1);
+        String dayOfWeek = simpleDateFormat.format(date);
+        String monthString = monthDateFormat.format(date);
+        customDate = "?date="+year+"-"+customMonth+"-"+customDay;
+
+        Intent intent = new Intent(getApplicationContext(), ScoreBoard.class);
+        Bundle extras = new Bundle();
+        extras.putString("CUSTOM_DATE", customDate);
+        extras.putString("DAY_OF_WEEK", dayOfWeek);
+        extras.putString("MONTH_STRING", monthString);
+        intent.putExtras(extras);
+        startActivity(intent);
     }
 
     public void addTextToLinearLayout(JSONObject response){
@@ -460,4 +554,7 @@ public class ScoreBoard extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
 }
+
+
