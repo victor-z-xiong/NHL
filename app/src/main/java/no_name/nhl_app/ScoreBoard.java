@@ -1,5 +1,6 @@
 package no_name.nhl_app;
 
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -14,6 +15,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TableRow;
@@ -23,29 +25,25 @@ import android.widget.Toast;
 import com.android.volley.*;
 
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
-import com.google.gson.JsonObject;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 public class ScoreBoard extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private String customDate = null;
-    private EditText dateEditor;
+    TextView scoreDate;
+    Calendar mCurrentDate;
+    int day, month, year;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,16 +61,49 @@ public class ScoreBoard extends AppCompatActivity
         customDate = getIntent().getExtras() == null ? "" : getIntent().getExtras().getString("CUSTOM_DATE");
         String url = "https://statsapi.web.nhl.com/api/v1/schedule" + customDate;
 
-        Button button = (Button) findViewById(R.id.button_enter_date);
-        button.setOnClickListener(new View.OnClickListener() {
+        scoreDate = (TextView) findViewById(R.id.date_editor);
+
+        mCurrentDate = Calendar.getInstance();
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE");
+        SimpleDateFormat monthDateFormat = new SimpleDateFormat("MMM");
+
+        String dayOfWeek = getIntent().getExtras() == null ? simpleDateFormat.format(mCurrentDate.getTime()) : getIntent().getExtras().getString("DAY_OF_WEEK");
+        String monthString = getIntent().getExtras() == null ? monthDateFormat.format(mCurrentDate.getTime()) : getIntent().getExtras().getString("MONTH_STRING");
+        day = getIntent().getExtras() == null ? mCurrentDate.get(Calendar.DAY_OF_MONTH) : Integer.parseInt(customDate.substring(14));
+        month = getIntent().getExtras() == null ? mCurrentDate.get(Calendar.MONTH) : Integer.parseInt(customDate.substring(11,13));
+        year = getIntent().getExtras() == null ? mCurrentDate.get(Calendar.YEAR) : Integer.parseInt(customDate.substring(6,10));
+
+        month = getIntent().getExtras() == null ? month + 1 : month;
+        scoreDate.setText("Scores for "+ dayOfWeek+ ", " +monthString+ " " + day+" " +year);
+
+        scoreDate.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                Toast.makeText(getApplicationContext(), "It's magic", Toast.LENGTH_SHORT).show();
-                dateEditor = (EditText) findViewById(R.id.date_editor);
-                customDate = "?date=" + dateEditor.getText().toString();
-                Intent intent = new Intent(getApplicationContext(), ScoreBoard.class);
-                intent.putExtra("CUSTOM_DATE", customDate);
-                startActivity(intent);
+            public void onClick(View v) {
+                DatePickerDialog datePickerDialog = new DatePickerDialog(ScoreBoard.this, new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                        monthOfYear = monthOfYear+1;
+                        String customMonth = monthOfYear < 10 ? "0"+Integer.toString(monthOfYear) : Integer.toString(monthOfYear);
+                        String customDay = dayOfMonth < 10 ? "0"+Integer.toString(dayOfMonth) : Integer.toString(dayOfMonth);
+
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE");
+                        SimpleDateFormat monthDateFormat = new SimpleDateFormat("MMM");
+                        Date date = new Date(year, dayOfMonth < 2? monthOfYear : monthOfYear-1, dayOfMonth-1);
+                        String dayOfWeek = simpleDateFormat.format(date);
+                        String monthString = monthDateFormat.format(date);
+                        customDate = "?date="+year+"-"+customMonth+"-"+customDay;
+
+                        Intent intent = new Intent(getApplicationContext(), ScoreBoard.class);
+                        Bundle extras = new Bundle();
+                        extras.putString("CUSTOM_DATE", customDate);
+                        extras.putString("DAY_OF_WEEK", dayOfWeek);
+                        extras.putString("MONTH_STRING", monthString);
+                        intent.putExtras(extras);
+                        startActivity(intent);
+                    }
+                }, year, month-1, day);
+                datePickerDialog.show();
             }
         });
 
@@ -97,7 +128,6 @@ public class ScoreBoard extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
-
 
     public void addTextToLinearLayout(JSONObject response){
         try {
