@@ -44,6 +44,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.lang.String;
@@ -60,6 +61,7 @@ public class ScoreBoard extends AppCompatActivity
     ArrayList<Integer> idTags = new ArrayList<Integer>();
     int count = 0;
     ImageView goBackOneD, goFwdOneD;
+    String boxScoreURL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -173,6 +175,12 @@ public class ScoreBoard extends AppCompatActivity
         startActivity(intent);
     }
 
+    private void launchBoxScore(int textViewID){
+        Intent intent = new Intent(getApplicationContext(), BoxScore.class);
+        intent.putExtra("BOX_SCORE_URL", idToBoxScoreURL.get(textViewID));
+        startActivity(intent);
+    }
+
     public void addTextToLinearLayout(JSONObject response){
         try {
             TextView copyRight = (TextView) findViewById(R.id.copyrightID);
@@ -203,6 +211,8 @@ public class ScoreBoard extends AppCompatActivity
 
     }
 
+    HashMap<Integer, String> idToBoxScoreURL = new HashMap<Integer, String>();
+
     private void makeGameScoreTable(LinearLayout ll, String score, String team, String gameTime, int i, JSONArray games){
         TableRow row = new TableRow(this);
         LinearLayout llForRow = new LinearLayout(this);
@@ -228,6 +238,15 @@ public class ScoreBoard extends AppCompatActivity
         teamName.setTextSize(20);
         teamName.setLayoutParams(params);
         teamName.setPadding(50, 20, 0, 0);
+        boxScoreURL = getLiveGameFeedAndStatsLink(i, games);
+        idToBoxScoreURL.put(3*i, boxScoreURL);
+        teamName.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                launchBoxScore(view.getId());
+            }
+        });
 
         String gameState = getAbstractGameState(i, games);
         if(gameState.equals("Preview")){
