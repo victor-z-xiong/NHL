@@ -37,6 +37,8 @@ public class BoxScore extends AppCompatActivity {
             public void onResponse(JSONObject response) {
 
                 makeBanner(response);
+                makeMiddleLayer(response, true);
+                makeMiddleLayer(response, false);
                 makeScoringSummary(response);
 
             }
@@ -159,50 +161,91 @@ public class BoxScore extends AppCompatActivity {
     }
 
     private void makeBanner(JSONObject response){
+
         ImageView awayBig = findViewById(R.id.away_banner_logo);
         ImageView homeBig = findViewById(R.id.home_banner_logo);
-        ImageView awaySmall = findViewById(R.id.small_away_logo);
-        ImageView homeSmall = findViewById(R.id.small_home_logo);
+
         TextView timeLeft = findViewById(R.id.time_remaining);
         TextView periodState = findViewById(R.id.period);
         try {
             JSONObject gameData = response.getJSONObject("gameData");
             JSONObject teams = gameData.getJSONObject("teams");
             setLogo(teams.getJSONObject("away").getString("name"), awayBig);
-            setLogo(teams.getJSONObject("away").getString("name"), awaySmall);
             setLogo(teams.getJSONObject("home").getString("name"), homeBig);
-            setLogo(teams.getJSONObject("home").getString("name"), homeSmall);
+
             timeLeft.setText(response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodOrdinal"));
             periodState.setText(response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodTimeRemaining"));
         } catch (JSONException e){
             System.out.println("Unexpected JSON exception");
         }
-
-        addScoresToLineScore(response);
     }
 
-    private void addScoresToLineScore(JSONObject response){
+    private void makeMiddleLayer(JSONObject response, Boolean scoring){
+        android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, 1f);
+
+        LinearLayout head = findViewById(scoring ? R.id.Header_box_score : R.id.Header_shot_total);
+        LinearLayout away = findViewById(scoring ? R.id.away_box_score : R.id.away_shot_total);
+        LinearLayout home = findViewById(scoring ? R.id.home_box_score : R.id.home_shot_total);
+        TextView headText = new TextView(this);
+        headText.setText("Team");
+        headText.setTextSize(18);
+        headText.setLayoutParams(params);
+        head.addView(headText);
+        ImageView awaySmall = new ImageView(this);
+        ImageView homeSmall = new ImageView(this);
+        try {
+            JSONObject gameData = response.getJSONObject("gameData");
+            JSONObject teams = gameData.getJSONObject("teams");
+            setLogo(teams.getJSONObject("away").getString("name"), awaySmall);
+            setLogo(teams.getJSONObject("home").getString("name"), homeSmall);
+            awaySmall.setLayoutParams(params);
+            homeSmall.setLayoutParams(params);
+            away.addView(awaySmall);
+            home.addView(homeSmall);
+        } catch (JSONException e){
+            System.out.println("Unexpected JSON exception");
+        }
+
+        addScoresToLineScore(response, params, scoring);
+    }
+
+
+
+    private void addScoresToLineScore(JSONObject response, android.widget.LinearLayout.LayoutParams params, boolean scoring){
         try {
             JSONArray period = response.getJSONObject("liveData").getJSONObject("linescore").getJSONArray("periods");
-            TextView awayOne = findViewById(R.id.away_one);
-            TextView awayTwo = findViewById(R.id.away_two);
-            TextView awayThree = findViewById(R.id.away_three);
-            TextView awayFinal = findViewById(R.id.away_final);
-            TextView homeOne = findViewById(R.id.home_one);
-            TextView homeTwo = findViewById(R.id.home_two);
-            TextView homeThree = findViewById(R.id.home_three);
-            TextView homeFinal = findViewById(R.id.home_final);
+            TextView away, home, title;
+            LinearLayout titleLayout = findViewById(scoring ? R.id.Header_box_score : R.id.Header_shot_total);
+            LinearLayout awayLayout = findViewById(scoring ? R.id.away_box_score : R.id.away_shot_total);
+            LinearLayout homeLayout = findViewById(scoring ? R.id.home_box_score : R.id.home_shot_total);
 
-            awayOne.setText(Integer.toString(period.getJSONObject(0).getJSONObject("away").getInt("goals")));
-            awayTwo.setText(Integer.toString(period.getJSONObject(1).getJSONObject("away").getInt("goals")));
-            awayThree.setText(Integer.toString(period.getJSONObject(2).getJSONObject("away").getInt("goals")));
-            homeOne.setText(Integer.toString(period.getJSONObject(0).getJSONObject("home").getInt("goals")));
-            homeTwo.setText(Integer.toString(period.getJSONObject(1).getJSONObject("home").getInt("goals")));
-            homeThree.setText(Integer.toString(period.getJSONObject(2).getJSONObject("home").getInt("goals")));
-            awayFinal.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
-                    .getJSONObject("away").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt("goals")));
-            homeFinal.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
-                    .getJSONObject("home").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt("goals")));
+            for(int i = 0; i <= period.length()+1; i++){
+                title = new TextView(this);
+                away = new TextView(this);
+                home = new TextView(this);
+
+                if(i == period.length()){
+                    title.setText("final");
+                    away.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
+                            .getJSONObject("away").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt(scoring ? "goals" : "shots")));
+                    home.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
+                            .getJSONObject("home").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt(scoring ? "goals" : "shots")));
+                }else {
+                    title.setText(period.getJSONObject(i).getString("ordinalNum"));
+                    away.setText(Integer.toString(period.getJSONObject(i).getJSONObject("away").getInt(scoring ? "goals" : "shotsOnGoal")));
+                    home.setText(Integer.toString(period.getJSONObject(i).getJSONObject("home").getInt(scoring ? "goals" : "shotsOnGoal")));
+                }
+
+                title.setLayoutParams(params);
+                away.setLayoutParams(params);
+                home.setLayoutParams(params);
+
+                titleLayout.addView(title);
+                awayLayout.addView(away);
+                homeLayout.addView(home);
+            }
+
         } catch (JSONException e){
             System.out.println("Unexpected JSON exception");
         }
