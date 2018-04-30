@@ -9,6 +9,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -359,7 +360,8 @@ public class ScoreBoard extends AppCompatActivity
     private void displayNoGamesMsg(LinearLayout ll){
         TextView msg = new TextView(this);
         msg.setText("No games on this date");
-        msg.setPadding(250, 600, 0, 0);
+        msg.setGravity(Gravity.CENTER);
+        msg.setPadding(0, 600, 0, 0);
         msg.setTextSize(24);
         ll.addView(msg);
     }

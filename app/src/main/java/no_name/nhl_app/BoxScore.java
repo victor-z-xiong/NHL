@@ -2,6 +2,7 @@ package no_name.nhl_app;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -87,6 +88,13 @@ public class BoxScore extends AppCompatActivity {
                 periodText.setTextSize(18);
 
                 makeScoringSummaryPeriod(scoringPlays, ll, periodRow, periodText, allPlays, tableRowParams);
+            }
+            if(periods.length() == 0){
+                TextView noGameYet = new TextView(this);
+                noGameYet.setText("Game has yet to start!");
+                noGameYet.setGravity(Gravity.CENTER);
+                noGameYet.setPadding(0,30,0,0);
+                ll.addView(noGameYet);
             }
 
         } catch(JSONException e){
@@ -199,32 +207,122 @@ public class BoxScore extends AppCompatActivity {
         } catch (JSONException e){
             System.out.println("Unexpected JSON exception");
         }
-
-        addScoresToLineScore(response, params, scoring);
+        String gameState = getAbstractGameState(response);
+        addScoresToLineScore(response, params, scoring, gameState);
     }
 
 
 
-    private void addScoresToLineScore(JSONObject response, android.widget.LinearLayout.LayoutParams params, boolean scoring){
+    private void addScoresToLineScore(JSONObject response, android.widget.LinearLayout.LayoutParams params, boolean scoring, String gameState){
         try {
             JSONArray period = response.getJSONObject("liveData").getJSONObject("linescore").getJSONArray("periods");
-            TextView away, home, title;
+            TextView away = new TextView(this);
+            TextView home = new TextView (this);
+            TextView title = new TextView(this);
             LinearLayout titleLayout = findViewById(scoring ? R.id.Header_box_score : R.id.Header_shot_total);
             LinearLayout awayLayout = findViewById(scoring ? R.id.away_box_score : R.id.away_shot_total);
             LinearLayout homeLayout = findViewById(scoring ? R.id.home_box_score : R.id.home_shot_total);
 
-            for(int i = 0; i <= period.length()+1; i++){
+            if(gameState.equals("Final")){
+                addScoresFinal(response, period, title, away, home, titleLayout, awayLayout, homeLayout, params, scoring);
+            }else if(gameState.equals("Live")){
+                addScoresLive(response, period, title, away, home, titleLayout, awayLayout, homeLayout, params, scoring);
+            }else{
+                addScoresPreview(response, period, title, away, home, titleLayout, awayLayout, homeLayout, params, scoring);
+            }
+
+        } catch (JSONException e){
+            System.out.println("Unexpected JSON exception");
+        }
+    }
+
+    private void addScoresPreview(JSONObject response, JSONArray period, TextView title, TextView away, TextView home, LinearLayout titleLayout, LinearLayout awayLayout,
+                                  LinearLayout homeLayout, android.widget.LinearLayout.LayoutParams params, boolean scoring){
+
+        for(int j = 0; j < 4; j++){
+            title = new TextView(this);
+            away = new TextView(this);
+            home = new TextView(this);
+
+            title.setText(setOrdinalNumber(j));
+            away.setText("---");
+            home.setText("---");
+
+
+            title.setLayoutParams(params);
+            away.setLayoutParams(params);
+            home.setLayoutParams(params);
+
+            titleLayout.addView(title);
+            awayLayout.addView(away);
+            homeLayout.addView(home);
+        }
+    }
+
+    private void addScoresLive(JSONObject response, JSONArray period, TextView title, TextView away, TextView home, LinearLayout titleLayout, LinearLayout awayLayout,
+                               LinearLayout homeLayout, android.widget.LinearLayout.LayoutParams params, boolean scoring){
+        try {
+            int i;
+            for(i = 0; i < period.length(); i++){
+                title = new TextView(this);
+                away = new TextView(this);
+                home = new TextView(this);
+
+                title.setText(period.getJSONObject(i).getString("ordinalNum"));
+                away.setText(Integer.toString(period.getJSONObject(i).getJSONObject("away").getInt(scoring ? "goals" : "shotsOnGoal")));
+                home.setText(Integer.toString(period.getJSONObject(i).getJSONObject("home").getInt(scoring ? "goals" : "shotsOnGoal")));
+
+
+                title.setLayoutParams(params);
+                away.setLayoutParams(params);
+                home.setLayoutParams(params);
+
+                titleLayout.addView(title);
+                awayLayout.addView(away);
+                homeLayout.addView(home);
+            }
+
+            if(i < 4){
+                for(int j = i; j < 4; j++){
+                    title = new TextView(this);
+                    away = new TextView(this);
+                    home = new TextView(this);
+
+                    title.setText(setOrdinalNumber(j));
+                    away.setText("---");
+                    home.setText("---");
+
+
+                    title.setLayoutParams(params);
+                    away.setLayoutParams(params);
+                    home.setLayoutParams(params);
+
+                    titleLayout.addView(title);
+                    awayLayout.addView(away);
+                    homeLayout.addView(home);
+                }
+            }
+
+        } catch (JSONException e){
+            System.out.println("Unexpected JSON exception");
+        }
+    }
+
+    private void addScoresFinal(JSONObject response, JSONArray period, TextView title, TextView away, TextView home, LinearLayout titleLayout, LinearLayout awayLayout,
+                                LinearLayout homeLayout, android.widget.LinearLayout.LayoutParams params, boolean scoring){
+        try {
+            for(int i = 0; i < period.length()+1; i++){
                 title = new TextView(this);
                 away = new TextView(this);
                 home = new TextView(this);
 
                 if(i == period.length()){
-                    title.setText("final");
+                    title.setText("Final");
                     away.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
                             .getJSONObject("away").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt(scoring ? "goals" : "shots")));
                     home.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
                             .getJSONObject("home").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt(scoring ? "goals" : "shots")));
-                }else {
+                }else{
                     title.setText(period.getJSONObject(i).getString("ordinalNum"));
                     away.setText(Integer.toString(period.getJSONObject(i).getJSONObject("away").getInt(scoring ? "goals" : "shotsOnGoal")));
                     home.setText(Integer.toString(period.getJSONObject(i).getJSONObject("home").getInt(scoring ? "goals" : "shotsOnGoal")));
@@ -252,5 +350,37 @@ public class BoxScore extends AppCompatActivity {
         int drawableID = getResources().getIdentifier(teamLogoFileName, "drawable", getPackageName());
         teamLogo.setImageResource(drawableID);
         teamLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+    }
+
+    private String getAbstractGameState(JSONObject response){
+        String gameState = "";
+        try{
+            gameState = response.getJSONObject("gameData").getJSONObject("status").getString("abstractGameState");
+        } catch (JSONException e){
+            System.out.println("Unexpected JSON Exception");
+        }
+        return gameState;
+    }
+
+    //only gives periods 1st, 2nd, 3rd and final
+    private String setOrdinalNumber(int j){
+
+        String ordinalNum = "";
+        switch(j){
+            case 0:
+                ordinalNum = "1st";
+                break;
+            case 1:
+                ordinalNum = "2nd";
+                break;
+            case 2:
+                ordinalNum = "3rd";
+                break;
+            default:
+                ordinalNum = "Final";
+                break;
+        }
+
+        return ordinalNum;
     }
 }
