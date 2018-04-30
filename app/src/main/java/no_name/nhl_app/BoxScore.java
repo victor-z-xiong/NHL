@@ -55,47 +55,40 @@ public class BoxScore extends AppCompatActivity {
     }
 
     private void makeScoringSummary(JSONObject response){
-        ArrayList<Integer> scoringPlaysOne = new ArrayList<Integer>();
-        ArrayList<Integer> scoringPlaysTwo = new ArrayList<Integer>();
-        ArrayList<Integer> scoringPlaysThree = new ArrayList<Integer>();
+
+        ArrayList<Integer> scoringPlays = new ArrayList<Integer>();
         try {
             JSONArray goals = response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("scoringPlays");
-            int endOfFirst = 1 + response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("playsByPeriod").getJSONObject(0).getInt("endIndex");
-            int endOfSecond = 1 + response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("playsByPeriod").getJSONObject(1).getInt("endIndex");
-            triCodeAway = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("away").getString("triCode");
-            triCodeHome = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("home").getString("triCode");
-            for(int i = 0; i < goals.length(); i++){
-                if(goals.getInt(i) <= endOfFirst){
-                    scoringPlaysOne.add(goals.getInt(i));
-                }else if(goals.getInt(i) <= endOfSecond){
-                    scoringPlaysTwo.add(goals.getInt(i));
-                }else{
-                    scoringPlaysThree.add(goals.getInt(i));
-                }
-            }
-
+            JSONArray periods = response.getJSONObject("liveData").getJSONObject("linescore").getJSONArray("periods");
+            int endOfPeriod, startOfPeriod;
             LinearLayout ll = (LinearLayout) findViewById(R.id.scoring_summary);
-            TableRow FirstPeriod = new TableRow(this);
-            TableRow SecondPeriod = new TableRow(this);
-            TableRow ThirdPeriod = new TableRow(this);
-
-            TextView firstText = new TextView(this);
-            TextView secondText = new TextView(this);
-            TextView thirdText = new TextView(this);
-
-            firstText.setText("First Period");
-            firstText.setTextSize(18);
-            secondText.setText("Second Period");
-            secondText.setTextSize(18);
-            thirdText.setText("ThirdPeriod");
-            thirdText.setTextSize(18);
-
+            TableRow periodRow;
+            TextView periodText;
+            String periodString;
             JSONArray allPlays = response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("allPlays");
             TableLayout.LayoutParams tableRowParams = new TableLayout.LayoutParams(TableLayout.LayoutParams.FILL_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
             tableRowParams.setMargins(20, 10,20, 0);
-            makeScoringSummaryPeriod(scoringPlaysOne, ll, FirstPeriod, firstText, allPlays, tableRowParams);
-            makeScoringSummaryPeriod(scoringPlaysTwo, ll, SecondPeriod, secondText, allPlays, tableRowParams);
-            makeScoringSummaryPeriod(scoringPlaysThree, ll, ThirdPeriod, thirdText, allPlays, tableRowParams);
+            triCodeAway = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("away").getString("triCode");
+            triCodeHome = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("home").getString("triCode");
+            for(int j = 0; j < periods.length(); j++){
+                endOfPeriod  = 1 + response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("playsByPeriod").getJSONObject(j).getInt("endIndex");
+                startOfPeriod = response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("playsByPeriod").getJSONObject(j).getInt("startIndex");
+                scoringPlays.clear();
+                for(int k = 0; k < goals.length(); k++){
+                    if(goals.getInt(k) <= endOfPeriod && goals.getInt(k) >=startOfPeriod){
+                        scoringPlays.add(goals.getInt(k));
+                    }
+                }
+
+                periodRow = new TableRow(this);
+                periodText = new TextView(this);
+                periodString = periods.getJSONObject(j).getString("ordinalNum") + (j < 3 ? " period" : "");
+                periodText.setText(periodString);
+                periodText.setTextSize(18);
+
+                makeScoringSummaryPeriod(scoringPlays, ll, periodRow, periodText, allPlays, tableRowParams);
+            }
+
         } catch(JSONException e){
             System.out.println("Unexpected JSON exception");
         }
