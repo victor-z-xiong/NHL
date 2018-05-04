@@ -22,9 +22,11 @@
             </intent-filter>
         </activity>
         <activity android:name=".BoxScore" />
-        <activity android:name=".ScoreBoard"
+        <activity
+            android:name=".ScoreBoard"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".Player"></activity>
     </application>
 
 </manifest>
