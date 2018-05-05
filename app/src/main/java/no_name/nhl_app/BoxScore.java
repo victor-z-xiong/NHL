@@ -1,8 +1,10 @@
 package no_name.nhl_app;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -20,6 +22,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class BoxScore extends AppCompatActivity {
 
@@ -68,7 +71,7 @@ public class BoxScore extends AppCompatActivity {
             String periodString;
             JSONArray allPlays = response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("allPlays");
             TableLayout.LayoutParams tableRowParams = new TableLayout.LayoutParams(TableLayout.LayoutParams.FILL_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
-            tableRowParams.setMargins(20, 10,20, 0);
+            TableLayout.LayoutParams tableRowParams2 = new TableLayout.LayoutParams(TableLayout.LayoutParams.FILL_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
             triCodeAway = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("away").getString("triCode");
             triCodeHome = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("home").getString("triCode");
             for(int j = 0; j < periods.length(); j++){
@@ -86,8 +89,9 @@ public class BoxScore extends AppCompatActivity {
                 periodString = periods.getJSONObject(j).getString("ordinalNum") + (j < 3 ? " period" : "");
                 periodText.setText(periodString);
                 periodText.setTextSize(18);
+                periodText.setPadding(0,0,0,20);
 
-                makeScoringSummaryPeriod(scoringPlays, ll, periodRow, periodText, allPlays, tableRowParams);
+                makeScoringSummaryPeriod(scoringPlays, ll, periodRow, periodText, allPlays, tableRowParams, tableRowParams2);
             }
             if(periods.length() == 0){
                 TextView noGameYet = new TextView(this);
@@ -102,43 +106,148 @@ public class BoxScore extends AppCompatActivity {
         }
     }
 
-    private void makeScoringSummaryPeriod(ArrayList<Integer> scoringPlays, LinearLayout scoringSummary, TableRow period, TextView periodText, JSONArray allPlays, TableLayout.LayoutParams tableRowParams){
+    HashMap<Integer, String> idToPlayerURL = new HashMap<Integer, String>();
+    HashMap<Integer, String> idToPlayerName = new HashMap<Integer, String>();
+    int idMaker = 0;
+
+    private void makeScoringSummaryPeriod(ArrayList<Integer> scoringPlays, LinearLayout scoringSummary,
+                                          TableRow period, TextView periodText, JSONArray allPlays,
+                                          TableLayout.LayoutParams tableRowParams, TableLayout.LayoutParams tableRowParams2){
         LinearLayout ll = new LinearLayout(this);
         ll.setOrientation(LinearLayout.VERTICAL);
         period.addView(periodText);
         period.setLayoutParams(tableRowParams);
         ll.addView(period);
-        TableRow row1, row2, spacerRow;
-        TextView playTextLine1, playTextLine2, blankView;
-        String playString1, playString2;
+        LinearLayout row1LinearLayout, rowMidLinearLayout;
+        TableRow row1, row2, spacerRow, midRow;
+        TextView playTextLine1, goalScorerText, afterGoalScocerText, assistOneText, afterAssistOneText,
+                assistTwoText, afterAssistTwoText, playTextLine2, blankView, assistTitleText, unassistedText;
+        String playString1, playString2, goalScorer, assistOne, assistTwo, goalScorerUrl, assistOneUrl, assistTwoUrl;
         JSONObject playObject;
         for(int i = 0; i < scoringPlays.size(); i++){
             try {
+                idMaker++;
                 row1 = new TableRow(this);
                 row2 = new TableRow(this);
+                midRow = new TableRow(this);
+                row1LinearLayout = new LinearLayout(this);
+                rowMidLinearLayout = new LinearLayout(this);
                 playTextLine1 = new TextView(this);
+                goalScorerText = new TextView(this);
+                afterGoalScocerText = new TextView(this);
+                assistOneText = new TextView(this);
+                afterAssistOneText = new TextView(this);
+                assistTwoText = new TextView(this);
+                afterAssistTwoText = new TextView(this);
                 playTextLine2 = new TextView(this);
+                assistTitleText = new TextView(this);
+                unassistedText = new TextView(this);
                 playObject = allPlays.getJSONObject(scoringPlays.get(i));
+                boolean unassisted = false;
 
                 String triCode = playObject.getJSONObject("team").getString("triCode");
                 String description = playObject.getJSONObject("result").getString("description");
+                String typeOfGoal = typeOfGoal(description);
+                String afterAssistOne = afterAssistOne(description);
+                String afterAssistTwo = afterAssistTwo(description);
+                switch(playObject.getJSONArray("players").length()){
+                    case 4:
+                        goalScorer = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("fullName");
+                        assistOne = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("fullName");
+                        assistTwo = playObject.getJSONArray("players").getJSONObject(2).getJSONObject("player").getString("fullName");
+                        goalScorerUrl = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("link");
+                        assistOneUrl = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("link");
+                        assistTwoUrl = playObject.getJSONArray("players").getJSONObject(2).getJSONObject("player").getString("link");
+                        break;
+                    case 3:
+                        goalScorer = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("fullName");
+                        assistOne = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("fullName");
+                        assistTwo = "";
+                        goalScorerUrl = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("link");
+                        assistOneUrl = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("link");
+                        assistTwoUrl = "";
+                        break;
+                    default:
+                        goalScorer = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("fullName");
+                        assistOne = "";
+                        assistTwo = "";
+                        goalScorerUrl = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("link");
+                        assistOneUrl = "";
+                        assistTwoUrl = "";
+                        unassisted = true;
+                        break;
+                }
 
                 String timeOfGoal = playObject.getJSONObject("about").getString("periodTimeRemaining");
                 String strength = playObject.getJSONObject("result").getJSONObject("strength").getString("code");
                 String awayGoal = Integer.toString(playObject.getJSONObject("about").getJSONObject("goals").getInt("away"));
                 String homeGoal = Integer.toString(playObject.getJSONObject("about").getJSONObject("goals").getInt("home"));
 
-                playString1 = triCode + " " + description;
+                playString1 = triCode + " ";
                 playString2 = timeOfGoal + " " + strength + " " + triCodeAway + " " + awayGoal + " " + triCodeHome + " " + homeGoal;
+
                 playTextLine1.setText(playString1);
+                goalScorerText.setText(goalScorer);
+                goalScorerText.setId(17*idMaker+34);
+                idToPlayerURL.put(17*idMaker+34, goalScorerUrl);
+                idToPlayerName.put(17*idMaker+34, goalScorer);
+                goalScorerText.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        launchPlayerPage(view.getId());
+                    }
+                });
+                afterGoalScocerText.setText(typeOfGoal);
+                assistOneText.setText(assistOne);
+                assistOneText.setId(17*idMaker+35);
+                idToPlayerURL.put(17*idMaker+35, assistOneUrl);
+                idToPlayerName.put(17*idMaker+35, assistOne);
+                assistOneText.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        launchPlayerPage(view.getId());
+                    }
+                });
+                afterAssistOneText.setText(afterAssistOne);
+                assistTwoText.setText(assistTwo);
+                assistTwoText.setId(17*idMaker+36);
+                idToPlayerURL.put(17*idMaker+36, assistTwoUrl);
+                idToPlayerName.put(17*idMaker+36, assistTwo);
+                assistTwoText.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        launchPlayerPage(view.getId());
+                    }
+                });
+                afterAssistTwoText.setText(afterAssistTwo);
                 playTextLine2.setText(playString2);
-                row1.addView(playTextLine1);
+                assistTitleText.setText("Assists: ");
+                unassistedText.setText("unassisted");
+
+                row1LinearLayout.addView(playTextLine1);
+                row1LinearLayout.addView(goalScorerText);
+                row1LinearLayout.addView(afterGoalScocerText);
+                rowMidLinearLayout.addView(assistTitleText);
+                if(!unassisted) {
+                    rowMidLinearLayout.addView(assistOneText);
+                }else{
+                    rowMidLinearLayout.addView(unassistedText);
+                }
+                rowMidLinearLayout.addView(afterAssistOneText);
+                rowMidLinearLayout.addView(assistTwoText);
+                rowMidLinearLayout.addView(afterAssistTwoText);
+
+                row1.addView(row1LinearLayout);
                 row2.addView(playTextLine2);
-                tableRowParams.setMargins(20, 10,20, 0);
+                midRow.addView(rowMidLinearLayout);
+                tableRowParams.setMargins(20, 0,20, 0);
                 row1.setLayoutParams(tableRowParams);
-                tableRowParams.setMargins(20, 0,20, 20);
-                row2.setLayoutParams(tableRowParams);
+                midRow.setLayoutParams(tableRowParams);
+                tableRowParams2.setMargins(20, 0,20, 30);
+                row2.setLayoutParams(tableRowParams2);
+
                 ll.addView(row1);
+                ll.addView(midRow);
                 ll.addView(row2);
             } catch(JSONException e){
                 System.out.println("Unexpected JSON exception");
@@ -382,5 +491,75 @@ public class BoxScore extends AppCompatActivity {
         }
 
         return ordinalNum;
+    }
+
+    private String afterGoalScorer(String description){
+        String goalScorer = "";
+        int startIndex = description.indexOf('(') - 1;
+        int endIndex = description.indexOf(':');
+        if(endIndex == -1) {
+            goalScorer = description.substring(startIndex);
+        }else{
+            goalScorer = description.substring(startIndex, endIndex);
+        }
+        return goalScorer;
+    }
+
+    private String typeOfGoal(String description){
+        description = afterGoalScorer(description);
+        return description.substring(0, description.indexOf(','));
+    }
+
+    private String afterAssistOne(String description) {
+        description = removeBracket(description);
+        if(description.length() > 0) {
+            description = description.substring(description.indexOf(':'));
+            int startIndex = description.indexOf('(') - 1;
+            int endIndex = description.indexOf(',') + 2;
+            String assist = "";
+            try {
+                assist = description.substring(startIndex, endIndex);
+            } catch (IndexOutOfBoundsException e) {
+                assist = "";
+            }
+            return assist;
+        }
+        return "";
+    }
+
+    private String afterAssistTwo(String description) {
+        description = removeBracket(description);
+        description = removeBracket(description);
+        if(description.length() > 0) {
+            int startIndex = description.indexOf('(') - 1;
+            String assist = "";
+            try {
+                assist = description.substring(startIndex);
+            } catch (IndexOutOfBoundsException e) {
+                assist = "";
+            }
+            return assist;
+        }
+        return "";
+    }
+
+    private String removeBracket(String description){
+        int firstBracket = description.indexOf(')');
+        try{
+            description = description.substring(firstBracket + 1);
+        }catch(IndexOutOfBoundsException e) {
+            description = "";
+        }
+
+        return description;
+    }
+
+    private void launchPlayerPage(int textId){
+        Intent intent = new Intent(getApplicationContext(), Player.class);
+        Bundle extras = new Bundle();
+        extras.putString("PLAYER_NAME", idToPlayerName.get(textId));
+        extras.putString("PLAYER_URL", idToPlayerURL.get(textId));
+        intent.putExtras(extras);
+        startActivity(intent);
     }
 }
