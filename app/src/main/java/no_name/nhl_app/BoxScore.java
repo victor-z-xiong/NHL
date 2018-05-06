@@ -1,6 +1,7 @@
 package no_name.nhl_app;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -271,12 +272,16 @@ public class BoxScore extends AppCompatActivity {
     }
 
     private void makeBanner(JSONObject response){
+        android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, 1f);
 
         ImageView awayBig = findViewById(R.id.away_banner_logo);
         ImageView homeBig = findViewById(R.id.home_banner_logo);
 
         TextView timeLeft = findViewById(R.id.time_remaining);
         TextView periodState = findViewById(R.id.period);
+        TextView awayScore = findViewById(R.id.away_score);
+        TextView homeScore = findViewById(R.id.home_score);
         try {
             JSONObject gameData = response.getJSONObject("gameData");
             JSONObject teams = gameData.getJSONObject("teams");
@@ -284,7 +289,21 @@ public class BoxScore extends AppCompatActivity {
             setLogo(teams.getJSONObject("home").getString("name"), homeBig);
 
             timeLeft.setText(response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodOrdinal"));
+            timeLeft.setLayoutParams(params);
             periodState.setText(response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodTimeRemaining"));
+            awayScore.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
+                    .getJSONObject("away").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt("goals")));
+            awayScore.setTextSize(18);
+            awayScore.setLayoutParams(params);
+            awayScore.setGravity(Gravity.CENTER);
+            awayScore.setTypeface(null, Typeface.BOLD);
+            homeScore.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
+                    .getJSONObject("home").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt("goals")));
+            homeScore.setTextSize(18);
+            homeScore.setLayoutParams(params);
+            homeScore.setGravity(Gravity.CENTER);
+            homeScore.setTypeface(null, Typeface.BOLD);
+
         } catch (JSONException e){
             System.out.println("Unexpected JSON exception");
         }

@@ -69,7 +69,7 @@ public class Player extends AppCompatActivity {
                     LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, 1f);
 
             playerNameText.setText(player.getString("fullName")+ " | #" + Integer.toString(player.getInt("primaryNumber")));
-            playerNameText.setTextSize(22);
+            playerNameText.setTextSize(20);
             playerNameText.setGravity(Gravity.CENTER);
             playerNameText.setTypeface(null, Typeface.BOLD);
 
@@ -77,13 +77,17 @@ public class Player extends AppCompatActivity {
             setLogo(teamName, playerTeamLogo);
 
             playerTeamText.setText(teamName);
-            playerTeamText.setTextSize(20);
+            if(teamName.equals("Columbus Blue Jackets")){
+                playerTeamText.setTextSize(18);
+            }else {
+                playerTeamText.setTextSize(20);
+            }
             playerTeamText.setGravity(Gravity.CENTER);
 
             playerPositionText.setText(player.getJSONObject("primaryPosition").getString("abbreviation")
                                         + " | " + Integer.toString(player.getInt("weight")) + " lb"
                                         + " | " + player.getString("height")
-                                        + " | " + Integer.toString(player.getInt("currentAge")));
+                                        + " | Age: " + Integer.toString(player.getInt("currentAge")));
             playerPositionText.setTextSize(20);
             playerPositionText.setGravity(Gravity.CENTER);
             playerPositionText.setLayoutParams(params);
