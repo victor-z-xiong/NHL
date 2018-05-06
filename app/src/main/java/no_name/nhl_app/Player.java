@@ -1,5 +1,6 @@
 package no_name.nhl_app;
 
+import android.graphics.Typeface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -18,37 +19,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Player extends AppCompatActivity {
-    private static final String apiKey = "AIzaSyD2sRn3cJx3H5dWTtBKN5MqzeXuMBiWtRo";
-    private static final String cx = "015362381441204153993:d55bah2cf0e";
-    private String playerName = "bohorvat";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
-        playerName = getIntent().getExtras().getString("PLAYER_NAME").replace(" ", "");
         String profileUrl = "https://statsapi.web.nhl.com" + getIntent().getExtras().getString("PLAYER_URL");
-        String imageUrl = "https://www.googleapis.com/customsearch/v1?q="+playerName+"&cx="+cx+"&searchType=image&key="+apiKey;
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, imageUrl, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-
-                setProfilePicture(response);
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                System.out.println("Something is wrong");
-                error.printStackTrace();
-            }
-        });
-
-        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
 
         JsonObjectRequest jsonObjectRequest2 = new JsonObjectRequest(Request.Method.GET, profileUrl, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-
+                setProfilePicture(response);
                 setPlayerProfile(response);
 
             }
@@ -65,15 +45,9 @@ public class Player extends AppCompatActivity {
 
     private void setProfilePicture(JSONObject response){
         try{
-
-            if(response.getJSONObject("searchInformation").getInt("totalResults")==0) {
-                ImageView profilePic = (ImageView) findViewById(R.id.profile_pic);
-                profilePic.setImageResource(R.drawable.player_headshot);
-            }else {
-                JSONArray items = response.getJSONArray("items");
-                String imageLink = items.getJSONObject(0).getString("link");
-                Picasso.get().load(imageLink).into((ImageView) findViewById(R.id.profile_pic));
-            }
+            int id = response.getJSONArray("people").getJSONObject(0).getInt("id");
+            String imageLink = "https://nhl.bamcontent.com/images/headshots/current/168x168/" + Integer.toString(id) + ".jpg";
+            Picasso.get().load(imageLink).into((ImageView) findViewById(R.id.profile_pic));
 
         }catch (JSONException e){
             System.out.println("Something wrong");
@@ -95,8 +69,9 @@ public class Player extends AppCompatActivity {
                     LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, 1f);
 
             playerNameText.setText(player.getString("fullName")+ " | #" + Integer.toString(player.getInt("primaryNumber")));
-            playerNameText.setTextSize(24);
+            playerNameText.setTextSize(22);
             playerNameText.setGravity(Gravity.CENTER);
+            playerNameText.setTypeface(null, Typeface.BOLD);
 
             String teamName = player.getJSONObject("currentTeam").getString("name");
             setLogo(teamName, playerTeamLogo);
