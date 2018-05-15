@@ -8,11 +8,9 @@
     tools:context="no_name.nhl_app.Player">
 
     <ScrollView
-        android:layout_width="368dp"
-        android:layout_height="499dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginBottom="4dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -134,10 +132,24 @@
                 android:layout_height="wrap_content">
 
                 <LinearLayout
-                    android:id="@+id/player_career_stats_table"
+                    android:id="@+id/player_career_stats_parent"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="vertical"></LinearLayout>
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:id="@+id/player_career_stats_table"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"></LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/last_row"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"></LinearLayout>
+                </LinearLayout>
+
             </HorizontalScrollView>
         </LinearLayout>
 

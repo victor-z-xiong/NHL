@@ -1,5 +1,6 @@
 package no_name.nhl_app;
 
+import android.app.ActionBar;
 import android.graphics.Typeface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -57,8 +58,37 @@ public class Player extends AppCompatActivity {
             }
         });
 
+        String careerStatsTotalUrl = "https://statsapi.web.nhl.com/api/v1/people/"+playerId+"/stats/?stats=careerRegularSeason";
+        JsonObjectRequest jsonObjectRequest3 = new JsonObjectRequest(Request.Method.GET, careerStatsTotalUrl, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+                setPlayerCareerStatsTotal(response);
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                System.out.println("Something is wrong");
+                error.printStackTrace();
+            }
+        });
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest2);
+        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest3);
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
+    }
+
+    private void setPlayerCareerStatsTotal(JSONObject response){
+        try{
+            JSONArray statsYearByYear = response.getJSONArray("stats").getJSONObject(0).getJSONArray("splits");
+
+            LinearLayout statsTable = (LinearLayout) findViewById(R.id.last_row);
+
+            makeCareerStatRow(statsYearByYear.getJSONObject(0), statsTable, true);
+
+        }catch (JSONException e){
+            System.out.println("Something wrong");
+        }
     }
 
     private void setPlayerCareerStats(JSONObject response){
@@ -68,14 +98,16 @@ public class Player extends AppCompatActivity {
             LinearLayout statsTable = (LinearLayout) findViewById(R.id.player_career_stats_table);
             makeCareerStatRowTitle(statsTable);
             for(int i = 0; i < statsYearByYear.length(); i++){
-                makeCareerStatRow(statsYearByYear.getJSONObject(i), statsTable);
+
+                makeCareerStatRow(statsYearByYear.getJSONObject(i), statsTable, false);
+
             }
         }catch (JSONException e){
             System.out.println("Something wrong");
         }
     }
 
-    private void makeCareerStatRow(JSONObject statsForYear, LinearLayout statsTable){
+    private void makeCareerStatRow(JSONObject statsForYear, LinearLayout statsTable, boolean total){
         LinearLayout horizontalRow = new LinearLayout(this);
         TableRow row = new TableRow(this);
         TextView year = new TextView(this);
@@ -89,33 +121,39 @@ public class Player extends AppCompatActivity {
         TextView hits = new TextView(this);
         TextView plusMinus = new TextView(this);
 
-        try{
-            year.setText(statsForYear.getString("season"));
-            setTitleParams(year);
 
-            team.setText(statsForYear.getJSONObject("team").getString("name"));
-            setTitleParams(team);
+        try{
+            String season = total ? "" : statsForYear.getString("season").substring(0,4) + "-" + statsForYear.getString("season").substring(4);
+            year.setText(season);
+            setTitleParams(year, 300, false);
+
+            team.setText(total ? "NHL Totals" : statsForYear.getJSONObject("team").getString("name"));
+            setTitleParams(team, 400, false);
+            team.setGravity(Gravity.LEFT);
 
             gamesPlayed.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("games")));
-            setTitleParams(gamesPlayed);
+            setTitleParams(gamesPlayed, 150, false);
 
             goals.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("goals")));
-            setTitleParams(goals);
+            setTitleParams(goals, 150, false);
 
             assists.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("assists")));
-            setTitleParams(assists);
+            setTitleParams(assists, 150, false);
 
             points.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("points")));
-            setTitleParams(points);
+            setTitleParams(points, 150, false);
 
             pim.setText(statsForYear.getJSONObject("stat").getString("penaltyMinutes"));
-            setTitleParams(pim);
+            setTitleParams(pim, 150, false);
 
             shots.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("shots")));
-            setTitleParams(shots);
+            setTitleParams(shots, 150, false);
 
             hits.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("hits")));
-            setTitleParams(hits);
+            setTitleParams(hits, 150, false);
+
+            plusMinus.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("plusMinus")));
+            setTitleParams(plusMinus, 150, false);
         } catch (JSONException e ){
             System.out.println("Something went wrong");
         }
@@ -150,34 +188,35 @@ public class Player extends AppCompatActivity {
         TextView plusMinus = new TextView(this);
 
         year.setText("Year");
-        setTitleParams(year);
+        setTitleParams(year, 300, true);
 
-        team.setText("team");
-        setTitleParams(team);
+        team.setText("Team");
+        setTitleParams(team, 400, true);
+        team.setGravity(Gravity.LEFT);
 
         gamesPlayed.setText("GP");
-        setTitleParams(gamesPlayed);
+        setTitleParams(gamesPlayed, 150, true);
 
         goals.setText("G");
-        setTitleParams(goals);
+        setTitleParams(goals, 150, true);
 
         assists.setText("A");
-        setTitleParams(assists);
+        setTitleParams(assists, 150, true);
 
         points.setText("P");
-        setTitleParams(points);
+        setTitleParams(points, 150, true);
 
         pim.setText("PIM");
-        setTitleParams(pim);
+        setTitleParams(pim, 150, true);
 
         shots.setText("Shots");
-        setTitleParams(shots);
+        setTitleParams(shots, 150, true);
 
         hits.setText("Hits");
-        setTitleParams(hits);
+        setTitleParams(hits, 150, true);
 
         plusMinus.setText("+/-");
-        setTitleParams(plusMinus);
+        setTitleParams(plusMinus, 150, true);
 
         tableHead.addView(year);
         tableHead.addView(team);
@@ -194,8 +233,13 @@ public class Player extends AppCompatActivity {
         statsTable.addView(row);
     }
 
-    private void setTitleParams(TextView headerTitle){
+    private void setTitleParams(TextView headerTitle, int width, boolean bold){
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width, ActionBar.LayoutParams.WRAP_CONTENT);
         headerTitle.setGravity(Gravity.CENTER);
+        headerTitle.setLayoutParams(params);
+        if(bold){
+            headerTitle.setTypeface(null, Typeface.BOLD);
+        }
     }
 
     private void setProfilePicture(JSONObject response){
