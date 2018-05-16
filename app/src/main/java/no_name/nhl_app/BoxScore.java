@@ -2,6 +2,7 @@ package no_name.nhl_app;
 
 import android.content.Intent;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -35,7 +36,7 @@ public class BoxScore extends AppCompatActivity {
         setContentView(R.layout.activity_box_score);
 
         Bundle extras = getIntent().getExtras();
-        String url = extras.getString("BOX_SCORE_URL");
+        final String url = extras.getString("BOX_SCORE_URL");
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
@@ -44,7 +45,7 @@ public class BoxScore extends AppCompatActivity {
                 makeBanner(response);
                 makeMiddleLayer(response, true);
                 makeMiddleLayer(response, false);
-                makeScoringSummary(response);
+                makeScoringSummary(response, url);
 
             }
         }, new Response.ErrorListener() {
@@ -59,7 +60,7 @@ public class BoxScore extends AppCompatActivity {
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
     }
 
-    private void makeScoringSummary(JSONObject response){
+    private void makeScoringSummary(JSONObject response, String url){
 
         ArrayList<Integer> scoringPlays = new ArrayList<Integer>();
         try {
@@ -75,6 +76,7 @@ public class BoxScore extends AppCompatActivity {
             TableLayout.LayoutParams tableRowParams2 = new TableLayout.LayoutParams(TableLayout.LayoutParams.FILL_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
             triCodeAway = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("away").getString("triCode");
             triCodeHome = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("home").getString("triCode");
+            //String gameDate = response.getJSONObject("gameData").getJSONObject("dateTime").getString("dateTime").substring(0,10);
             for(int j = 0; j < periods.length(); j++){
                 endOfPeriod  = 1 + response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("playsByPeriod").getJSONObject(j).getInt("endIndex");
                 startOfPeriod = response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("playsByPeriod").getJSONObject(j).getInt("startIndex");
@@ -82,6 +84,7 @@ public class BoxScore extends AppCompatActivity {
                 for(int k = 0; k < goals.length(); k++){
                     if(goals.getInt(k) <= endOfPeriod && goals.getInt(k) >=startOfPeriod){
                         scoringPlays.add(goals.getInt(k));
+                        goalToEventID.put(goals.getInt(k), allPlays.getJSONObject(goals.getInt(k)).getJSONObject("about").getInt("eventId"));
                     }
                 }
 
@@ -92,7 +95,7 @@ public class BoxScore extends AppCompatActivity {
                 periodText.setTextSize(18);
                 periodText.setPadding(0,0,0,20);
 
-                makeScoringSummaryPeriod(scoringPlays, ll, periodRow, periodText, allPlays, tableRowParams, tableRowParams2);
+                makeScoringSummaryPeriod(scoringPlays, ll, periodRow, periodText, allPlays, tableRowParams, tableRowParams2, url);
             }
             if(periods.length() == 0){
                 TextView noGameYet = new TextView(this);
@@ -106,14 +109,16 @@ public class BoxScore extends AppCompatActivity {
             System.out.println("Unexpected JSON exception");
         }
     }
-
+    HashMap<Integer, Integer> goalToEventID = new HashMap<Integer, Integer>();
     HashMap<Integer, String> idToPlayerURL = new HashMap<Integer, String>();
     HashMap<Integer, String> idToPlayerName = new HashMap<Integer, String>();
+    HashMap<Integer, String> idToReplayURL = new HashMap<Integer, String>();
     int idMaker = 0;
 
     private void makeScoringSummaryPeriod(ArrayList<Integer> scoringPlays, LinearLayout scoringSummary,
                                           TableRow period, TextView periodText, JSONArray allPlays,
-                                          TableLayout.LayoutParams tableRowParams, TableLayout.LayoutParams tableRowParams2){
+                                          TableLayout.LayoutParams tableRowParams, TableLayout.LayoutParams tableRowParams2,
+                                          String url){
         LinearLayout ll = new LinearLayout(this);
         ll.setOrientation(LinearLayout.VERTICAL);
         period.addView(periodText);
@@ -125,6 +130,7 @@ public class BoxScore extends AppCompatActivity {
                 assistTwoText, afterAssistTwoText, playTextLine2, blankView, assistTitleText, unassistedText;
         String playString1, playString2, goalScorer, assistOne, assistTwo, goalScorerUrl, assistOneUrl, assistTwoUrl;
         JSONObject playObject;
+        ImageView replayButton;
         for(int i = 0; i < scoringPlays.size(); i++){
             try {
                 idMaker++;
@@ -143,6 +149,8 @@ public class BoxScore extends AppCompatActivity {
                 playTextLine2 = new TextView(this);
                 assistTitleText = new TextView(this);
                 unassistedText = new TextView(this);
+                replayButton = new ImageView(this);
+                replayButton.setImageResource(R.drawable.replay_button);
                 playObject = allPlays.getJSONObject(scoringPlays.get(i));
                 boolean unassisted = false;
 
@@ -225,9 +233,20 @@ public class BoxScore extends AppCompatActivity {
                 assistTitleText.setText("Assists: ");
                 unassistedText.setText("unassisted");
 
+                replayButton.setId(17*idMaker+37);
+                putReplayURLInHashMap(17*idMaker+37, url, scoringPlays.get(i));
+                replayButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        launchReplay(view.getId());
+                    }
+                });
+                replayButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+
                 row1LinearLayout.addView(playTextLine1);
                 row1LinearLayout.addView(goalScorerText);
                 row1LinearLayout.addView(afterGoalScocerText);
+                row1LinearLayout.addView(replayButton);
                 rowMidLinearLayout.addView(assistTitleText);
                 if(!unassisted) {
                     rowMidLinearLayout.addView(assistOneText);
@@ -270,6 +289,58 @@ public class BoxScore extends AppCompatActivity {
 
         scoringSummary.addView(ll);
     }
+
+    private void launchReplay(int replayID){
+
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(idToReplayURL.get(replayID))));
+    }
+
+    private void putReplayURLInHashMap(int replayIdImageView, String url, int goalId){
+
+        String urlContent = url.substring(0, 52) + "content";
+        final int goalID = goalId;
+        final int replayIDImageView = replayIdImageView;
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, urlContent, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+               goToGameContentURL(response, goalID, replayIDImageView);
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                System.out.println("Something is wrong");
+                error.printStackTrace();
+            }
+        });
+
+
+        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
+    }
+
+    private void goToGameContentURL(JSONObject response, int gameId, int replayId){
+        try{
+            JSONArray items = response.getJSONObject("highlights").getJSONObject("gameCenter").getJSONArray("items");
+            int eventId = goalToEventID.get(gameId);
+            JSONArray keywords;
+            for(int i = 0; i < items.length(); i++){
+                keywords = items.getJSONObject(i).getJSONArray("keywords");
+                for(int j = 0; j < keywords.length(); j++){
+                    String type = keywords.getJSONObject(j).getString("type");
+                    if(type.equals("statsEventId")){
+                        if(Integer.parseInt(keywords.getJSONObject(j).getString("value")) == eventId){
+                            String replayURL = items.getJSONObject(i).getJSONArray("playbacks").getJSONObject(9).getString("url");
+                            idToReplayURL.put(replayId, replayURL);
+                        }
+                    }
+                }
+            }
+        } catch (JSONException e){
+            System.out.println("Something is wrong");
+        }
+    }
+
 
     private void makeBanner(JSONObject response){
         android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(
