@@ -1,12 +1,17 @@
 package no_name.nhl_app;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -30,6 +35,7 @@ public class BoxScore extends AppCompatActivity {
 
     String triCodeAway = "";
     String triCodeHome = "";
+    WebView replayWindow;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -124,7 +130,7 @@ public class BoxScore extends AppCompatActivity {
         period.addView(periodText);
         period.setLayoutParams(tableRowParams);
         ll.addView(period);
-        LinearLayout row1LinearLayout, rowMidLinearLayout;
+        LinearLayout row1LinearLayout, rowMidLinearLayout, row2LinearLayout;
         TableRow row1, row2, spacerRow, midRow;
         TextView playTextLine1, goalScorerText, afterGoalScocerText, assistOneText, afterAssistOneText,
                 assistTwoText, afterAssistTwoText, playTextLine2, blankView, assistTitleText, unassistedText;
@@ -139,6 +145,7 @@ public class BoxScore extends AppCompatActivity {
                 midRow = new TableRow(this);
                 row1LinearLayout = new LinearLayout(this);
                 rowMidLinearLayout = new LinearLayout(this);
+                row2LinearLayout = new LinearLayout(this);
                 playTextLine1 = new TextView(this);
                 goalScorerText = new TextView(this);
                 afterGoalScocerText = new TextView(this);
@@ -246,7 +253,6 @@ public class BoxScore extends AppCompatActivity {
                 row1LinearLayout.addView(playTextLine1);
                 row1LinearLayout.addView(goalScorerText);
                 row1LinearLayout.addView(afterGoalScocerText);
-                row1LinearLayout.addView(replayButton);
                 rowMidLinearLayout.addView(assistTitleText);
                 if(!unassisted) {
                     rowMidLinearLayout.addView(assistOneText);
@@ -257,8 +263,11 @@ public class BoxScore extends AppCompatActivity {
                 rowMidLinearLayout.addView(assistTwoText);
                 rowMidLinearLayout.addView(afterAssistTwoText);
 
+                row2LinearLayout.addView(playTextLine2);
+                row2LinearLayout.addView(replayButton);
+
                 row1.addView(row1LinearLayout);
-                row2.addView(playTextLine2);
+                row2.addView(row2LinearLayout);
                 midRow.addView(rowMidLinearLayout);
                 tableRowParams.setMargins(20, 0,20, 0);
                 row1.setLayoutParams(tableRowParams);
@@ -292,7 +301,13 @@ public class BoxScore extends AppCompatActivity {
 
     private void launchReplay(int replayID){
 
-        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(idToReplayURL.get(replayID))));
+        //startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(idToReplayURL.get(replayID))));
+        Intent intent = new Intent(getApplicationContext(), replayPlayer.class);
+        Bundle extras = new Bundle();
+        extras.putString("REPLAY_URL", idToReplayURL.get(replayID));
+        intent.putExtras(extras);
+        startActivity(intent);
+
     }
 
     private void putReplayURLInHashMap(int replayIdImageView, String url, int goalId){
