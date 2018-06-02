@@ -2,10 +2,12 @@ package no_name.nhl_app;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
 import android.webkit.WebChromeClient;
@@ -35,11 +37,16 @@ public class BoxScore extends AppCompatActivity {
 
     String triCodeAway = "";
     String triCodeHome = "";
-    WebView replayWindow;
+    int pixelWidth = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_box_score);
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        pixelWidth = size.x;
 
         Bundle extras = getIntent().getExtras();
         final String url = extras.getString("BOX_SCORE_URL");
@@ -215,6 +222,7 @@ public class BoxScore extends AppCompatActivity {
                 });
                 afterGoalScocerText.setText(typeOfGoal);
                 assistOneText.setText(assistOne);
+                assistOneText.setTextSize(assistOne.length() + assistTwo.length() > 25 && pixelWidth < 1080 ? 11 : 14);
                 assistOneText.setId(17*idMaker+35);
                 idToPlayerURL.put(17*idMaker+35, assistOneUrl);
                 idToPlayerName.put(17*idMaker+35, assistOne);
@@ -226,6 +234,7 @@ public class BoxScore extends AppCompatActivity {
                 });
                 afterAssistOneText.setText(afterAssistOne);
                 assistTwoText.setText(assistTwo);
+                assistTwoText.setTextSize(assistOne.length() + assistTwo.length() > 25 && pixelWidth < 1080 ? 11 : 14);
                 assistTwoText.setId(17*idMaker+36);
                 idToPlayerURL.put(17*idMaker+36, assistTwoUrl);
                 idToPlayerName.put(17*idMaker+36, assistTwo);
@@ -236,6 +245,7 @@ public class BoxScore extends AppCompatActivity {
                     }
                 });
                 afterAssistTwoText.setText(afterAssistTwo);
+
                 playTextLine2.setText(playString2);
                 assistTitleText.setText("Assists: ");
                 unassistedText.setText("unassisted");
@@ -377,15 +387,16 @@ public class BoxScore extends AppCompatActivity {
             timeLeft.setText(response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodOrdinal"));
             timeLeft.setLayoutParams(params);
             periodState.setText(response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodTimeRemaining"));
+            periodState.setTextSize(pixelWidth >= 1080 ? 14 : 11);
             awayScore.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
                     .getJSONObject("away").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt("goals")));
-            awayScore.setTextSize(18);
+            awayScore.setTextSize(pixelWidth >= 1080 ? 18 : 16);
             awayScore.setLayoutParams(params);
             awayScore.setGravity(Gravity.CENTER);
             awayScore.setTypeface(null, Typeface.BOLD);
             homeScore.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
                     .getJSONObject("home").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt("goals")));
-            homeScore.setTextSize(18);
+            homeScore.setTextSize(pixelWidth >= 1080 ? 18 : 16);
             homeScore.setLayoutParams(params);
             homeScore.setGravity(Gravity.CENTER);
             homeScore.setTypeface(null, Typeface.BOLD);
@@ -623,7 +634,7 @@ public class BoxScore extends AppCompatActivity {
             int endIndex = description.indexOf(',') + 2;
             String assist = "";
             try {
-                assist = description.substring(startIndex, endIndex);
+                assist = endIndex == 1 ? description.substring(startIndex) : description.substring(startIndex, endIndex);
             } catch (IndexOutOfBoundsException e) {
                 assist = "";
             }

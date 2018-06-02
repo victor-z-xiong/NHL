@@ -3,12 +3,14 @@ package no_name.nhl_app;
 import android.app.ActionBar;
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
+import android.view.Display;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -64,6 +66,7 @@ public class ScoreBoard extends AppCompatActivity
     int count = 0;
     ImageView goBackOneD, goFwdOneD;
     String boxScoreURL;
+    int pixelWidth = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +80,11 @@ public class ScoreBoard extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        pixelWidth = size.x;
 
         customDate = getIntent().getExtras() == null ? "" : getIntent().getExtras().getString("CUSTOM_DATE");
         String url = "https://statsapi.web.nhl.com/api/v1/schedule" + customDate;
@@ -232,7 +240,7 @@ public class ScoreBoard extends AppCompatActivity
         int drawableID = getResources().getIdentifier(teamLogoFileName, "drawable", getPackageName());
         teamLogo.setImageResource(drawableID);
         teamLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        teamLogo.setLayoutParams(new LinearLayout.LayoutParams(250,LinearLayout.LayoutParams.MATCH_PARENT));
+        teamLogo.setLayoutParams(new LinearLayout.LayoutParams(logoWidthSpacing(),LinearLayout.LayoutParams.MATCH_PARENT));
         teamLogo.setPadding(0,20,0,10);
 
         teamName.setText(team);
@@ -257,7 +265,7 @@ public class ScoreBoard extends AppCompatActivity
         scoreText.setText(score);
         scoreText.setId(3*i+1);
         scoreText.setTextSize(24);
-        scoreText.setPadding(0, 20, 150, 0);
+        scoreText.setPadding(0, 20, scoreTextRightSpace(), 0);
 
         llForRow.addView(teamLogo);
         llForRow.addView(teamName);
@@ -290,24 +298,41 @@ public class ScoreBoard extends AppCompatActivity
                     gameTimeText.setText("Final");
             }
 
-            /*
-            setLiveGameStateTimePeriod(new VolleyCallback() {
-                @Override
-                public void onSuccess(String result, int idTag) {
-                    gameTimeText = findViewById(idTag);
-                    gameTimeText.setText(result);
-                }
-            }, i, games);
-            */
             gameTimeText.setId(3*i+2);
             gameTimeText.setTextSize(18);
-            gameTimeText.setPadding(50+250, 0, 0, 0);
+            gameTimeText.setPadding(50+logoWidthSpacing(), 0, 0, 0);
 
             spacerRow.addView(blankView);
             gameTimeRow.addView(gameTimeText);
             ll.addView(gameTimeRow);
             ll.addView(spacerRow);
         }
+    }
+
+    private int scoreTextRightSpace(){
+        int toReturn = 0;
+        switch(pixelWidth){
+            case 1440: toReturn = 150;
+                break;
+            case 1080: toReturn = 112;
+                break;
+            case 720: toReturn = 75;
+            default: toReturn = 37;
+        }
+        return toReturn;
+    }
+
+    private int logoWidthSpacing(){
+        int toReturn = 0;
+        switch(pixelWidth){
+            case 1440: toReturn = 250;
+            break;
+            case 1080: toReturn = 185;
+            break;
+            case 720: toReturn = 125;
+            default: toReturn = 63;
+        }
+        return toReturn;
     }
 
     private void setLGSTHelper(JSONObject response){

@@ -1,9 +1,12 @@
 package no_name.nhl_app;
 
 import android.app.ActionBar;
+import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.Typeface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Display;
 import android.view.Gravity;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -22,10 +25,19 @@ import org.json.JSONObject;
 import org.w3c.dom.Text;
 
 public class Player extends AppCompatActivity {
+
+    int pixelWidth = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        pixelWidth = size.x;
+
         String profileUrl = "https://statsapi.web.nhl.com" + getIntent().getExtras().getString("PLAYER_URL");
         String playerId = getIntent().getExtras().getString("PLAYER_URL").substring(15);
         JsonObjectRequest jsonObjectRequest2 = new JsonObjectRequest(Request.Method.GET, profileUrl, null, new Response.Listener<JSONObject>() {
@@ -84,7 +96,7 @@ public class Player extends AppCompatActivity {
 
             LinearLayout statsTable = (LinearLayout) findViewById(R.id.last_row);
 
-            makeCareerStatRow(statsYearByYear.getJSONObject(0), statsTable, true);
+            makeCareerStatRow(statsYearByYear.getJSONObject(0), statsTable, true, 1);
 
         }catch (JSONException e){
             System.out.println("Something wrong");
@@ -99,7 +111,7 @@ public class Player extends AppCompatActivity {
             makeCareerStatRowTitle(statsTable);
             for(int i = 0; i < statsYearByYear.length(); i++){
 
-                makeCareerStatRow(statsYearByYear.getJSONObject(i), statsTable, false);
+                makeCareerStatRow(statsYearByYear.getJSONObject(i), statsTable, false, i);
 
             }
         }catch (JSONException e){
@@ -107,7 +119,7 @@ public class Player extends AppCompatActivity {
         }
     }
 
-    private void makeCareerStatRow(JSONObject statsForYear, LinearLayout statsTable, boolean total){
+    private void makeCareerStatRow(JSONObject statsForYear, LinearLayout statsTable, boolean total, int rowNum){
         LinearLayout horizontalRow = new LinearLayout(this);
         TableRow row = new TableRow(this);
         TextView year = new TextView(this);
@@ -125,37 +137,51 @@ public class Player extends AppCompatActivity {
         try{
             String season = total ? "" : statsForYear.getString("season").substring(0,4) + "-" + statsForYear.getString("season").substring(4);
             year.setText(season);
-            setTitleParams(year, 300, false);
+            setTitleParams(year, yearSpacing(), false);
 
             team.setText(total ? "NHL Totals" : statsForYear.getJSONObject("team").getString("name"));
-            setTitleParams(team, 400, false);
+            setTitleParams(team, teamNameSpacing(), false);
             team.setGravity(Gravity.LEFT);
 
             gamesPlayed.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("games")));
-            setTitleParams(gamesPlayed, 150, false);
+            setTitleParams(gamesPlayed, mainColumnSpacing(), false);
 
             goals.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("goals")));
-            setTitleParams(goals, 150, false);
+            setTitleParams(goals, mainColumnSpacing(), false);
 
             assists.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("assists")));
-            setTitleParams(assists, 150, false);
+            setTitleParams(assists, mainColumnSpacing(), false);
 
             points.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("points")));
-            setTitleParams(points, 150, false);
+            setTitleParams(points, mainColumnSpacing(), false);
 
             pim.setText(statsForYear.getJSONObject("stat").getString("penaltyMinutes"));
-            setTitleParams(pim, 150, false);
+            setTitleParams(pim, mainColumnSpacing(), false);
 
             shots.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("shots")));
-            setTitleParams(shots, 150, false);
+            setTitleParams(shots, mainColumnSpacing(), false);
 
             hits.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("hits")));
-            setTitleParams(hits, 150, false);
+            setTitleParams(hits, mainColumnSpacing(), false);
 
             plusMinus.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("plusMinus")));
-            setTitleParams(plusMinus, 150, false);
+            setTitleParams(plusMinus, mainColumnSpacing(), false);
         } catch (JSONException e ){
             System.out.println("Something went wrong");
+        }
+
+        if(rowNum % 2 == 0){
+            year.setTextColor(Color.WHITE);
+            team.setTextColor(Color.WHITE);
+            gamesPlayed.setTextColor(Color.WHITE);
+            goals.setTextColor(Color.WHITE);
+            assists.setTextColor(Color.WHITE);
+            points.setTextColor(Color.WHITE);
+            pim.setTextColor(Color.WHITE);
+            shots.setTextColor(Color.WHITE);
+            hits.setTextColor(Color.WHITE);
+            plusMinus.setTextColor(Color.WHITE);
+            row.setBackgroundColor(Color.GRAY);
         }
 
         horizontalRow.addView(year);
@@ -188,35 +214,35 @@ public class Player extends AppCompatActivity {
         TextView plusMinus = new TextView(this);
 
         year.setText("Year");
-        setTitleParams(year, 300, true);
+        setTitleParams(year, yearSpacing(), true);
 
         team.setText("Team");
-        setTitleParams(team, 400, true);
+        setTitleParams(team, teamNameSpacing(), true);
         team.setGravity(Gravity.LEFT);
 
         gamesPlayed.setText("GP");
-        setTitleParams(gamesPlayed, 150, true);
+        setTitleParams(gamesPlayed, mainColumnSpacing(), true);
 
         goals.setText("G");
-        setTitleParams(goals, 150, true);
+        setTitleParams(goals, mainColumnSpacing(), true);
 
         assists.setText("A");
-        setTitleParams(assists, 150, true);
+        setTitleParams(assists, mainColumnSpacing(), true);
 
         points.setText("P");
-        setTitleParams(points, 150, true);
+        setTitleParams(points, mainColumnSpacing(), true);
 
         pim.setText("PIM");
-        setTitleParams(pim, 150, true);
+        setTitleParams(pim, mainColumnSpacing(), true);
 
         shots.setText("Shots");
-        setTitleParams(shots, 150, true);
+        setTitleParams(shots, mainColumnSpacing(), true);
 
         hits.setText("Hits");
-        setTitleParams(hits, 150, true);
+        setTitleParams(hits, mainColumnSpacing(), true);
 
         plusMinus.setText("+/-");
-        setTitleParams(plusMinus, 150, true);
+        setTitleParams(plusMinus, mainColumnSpacing(), true);
 
         tableHead.addView(year);
         tableHead.addView(team);
@@ -231,6 +257,45 @@ public class Player extends AppCompatActivity {
 
         row.addView(tableHead);
         statsTable.addView(row);
+    }
+
+    private int mainColumnSpacing(){
+        int toReturn = 0;
+        switch(pixelWidth){
+            case 1440: toReturn = 150;
+                break;
+            case 1080: toReturn = 112;
+                break;
+            case 720: toReturn = 75;
+            default: toReturn = 75;
+        }
+        return toReturn;
+    }
+
+    private int teamNameSpacing(){
+        int toReturn = 0;
+        switch(pixelWidth){
+            case 1440: toReturn = 400;
+                break;
+            case 1080: toReturn = 300;
+                break;
+            case 720: toReturn = 200;
+            default: toReturn = 200;
+        }
+        return toReturn;
+    }
+
+    private int yearSpacing(){
+        int toReturn = 0;
+        switch(pixelWidth){
+            case 1440: toReturn = 300;
+                break;
+            case 1080: toReturn = 225;
+                break;
+            case 720: toReturn = 150;
+            default: toReturn = 150;
+        }
+        return toReturn;
     }
 
     private void setTitleParams(TextView headerTitle, int width, boolean bold){
@@ -276,7 +341,7 @@ public class Player extends AppCompatActivity {
             setLogo(teamName, playerTeamLogo);
 
             playerTeamText.setText(teamName);
-            if(teamName.equals("Columbus Blue Jackets")){
+            if(teamName.length() > 18){
                 playerTeamText.setTextSize(18);
             }else {
                 playerTeamText.setTextSize(20);
@@ -287,7 +352,7 @@ public class Player extends AppCompatActivity {
                                         + " | " + Integer.toString(player.getInt("weight")) + " lb"
                                         + " | " + player.getString("height")
                                         + " | Age: " + Integer.toString(player.getInt("currentAge")));
-            playerPositionText.setTextSize(20);
+            playerPositionText.setTextSize(pixelWidth >= 1080 ? 20 : 17);
             playerPositionText.setGravity(Gravity.CENTER);
             playerPositionText.setLayoutParams(params);
 
