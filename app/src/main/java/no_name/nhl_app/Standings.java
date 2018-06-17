@@ -136,7 +136,7 @@ public class Standings extends AppCompatActivity
         TextView title = new TextView(this);
         title.setText(confTitle);
         title.setTextColor(Color.WHITE);
-        if(confTitle.equals("Eastern Conference")){ 
+        if(confTitle.equals("Eastern Conference")){  
             title.setBackgroundColor(Color.RED);
         }else{
             title.setBackgroundColor(Color.BLUE);
