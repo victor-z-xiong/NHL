@@ -260,42 +260,42 @@ public class Player extends AppCompatActivity {
     }
 
     private int mainColumnSpacing(){
-        int toReturn = 0;
-        switch(pixelWidth){
-            case 1440: toReturn = 150;
-                break;
-            case 1080: toReturn = 112;
-                break;
-            case 720: toReturn = 75;
-            default: toReturn = 75;
+
+        if(pixelWidth >= 1440){
+            return 150;
+        }else if (pixelWidth >= 1080){
+            return 112;
+        }else if (pixelWidth >= 720) {
+            return 75;
         }
-        return toReturn;
+
+        return 75;
     }
 
     private int teamNameSpacing(){
-        int toReturn = 0;
-        switch(pixelWidth){
-            case 1440: toReturn = 400;
-                break;
-            case 1080: toReturn = 300;
-                break;
-            case 720: toReturn = 200;
-            default: toReturn = 200;
+
+        if(pixelWidth >= 1440){
+            return 400;
+        }else if (pixelWidth >= 1080){
+            return 300;
+        }else if (pixelWidth >= 720) {
+            return 200;
         }
-        return toReturn;
+
+        return 200;
     }
 
     private int yearSpacing(){
-        int toReturn = 0;
-        switch(pixelWidth){
-            case 1440: toReturn = 300;
-                break;
-            case 1080: toReturn = 225;
-                break;
-            case 720: toReturn = 150;
-            default: toReturn = 150;
+
+        if(pixelWidth >= 1440){
+            return 300;
+        }else if (pixelWidth >= 1080){
+            return 225;
+        }else if (pixelWidth >= 720) {
+            return 150;
         }
-        return toReturn;
+
+        return 150;
     }
 
     private void setTitleParams(TextView headerTitle, int width, boolean bold){

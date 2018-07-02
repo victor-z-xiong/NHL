@@ -8,7 +8,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v4.view.ViewCompat;
+//import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.Display;
 import android.view.GestureDetector;
@@ -153,14 +154,14 @@ public class ScoreBoard extends AppCompatActivity
 
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
 
-        final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipelayout);
+        /*final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipelayout);
             swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
                 public void onRefresh() {
                     setDate(year, month, day);
                 }
             });
-
+        */
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
@@ -310,29 +311,29 @@ public class ScoreBoard extends AppCompatActivity
     }
 
     private int scoreTextRightSpace(){
-        int toReturn = 0;
-        switch(pixelWidth){
-            case 1440: toReturn = 150;
-                break;
-            case 1080: toReturn = 112;
-                break;
-            case 720: toReturn = 75;
-            default: toReturn = 37;
+
+        if(pixelWidth >= 1440){
+            return 150;
+        }else if (pixelWidth >= 1080){
+            return 112;
+        }else if (pixelWidth >= 720) {
+            return 75;
         }
-        return toReturn;
+
+        return 37;
     }
 
     private int logoWidthSpacing(){
-        int toReturn = 0;
-        switch(pixelWidth){
-            case 1440: toReturn = 250;
-            break;
-            case 1080: toReturn = 185;
-            break;
-            case 720: toReturn = 125;
-            default: toReturn = 63;
+
+        if(pixelWidth >= 1440){
+            return 250;
+        }else if (pixelWidth >= 1080){
+            return 185;
+        }else if (pixelWidth >= 720) {
+            return 125;
         }
-        return toReturn;
+
+        return 63;
     }
 
     private void setLGSTHelper(JSONObject response){
@@ -613,7 +614,7 @@ public class ScoreBoard extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            return true;
+            setDate(year, month, day);
         }
 
         return super.onOptionsItemSelected(item);

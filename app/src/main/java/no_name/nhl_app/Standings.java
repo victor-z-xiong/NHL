@@ -19,8 +19,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TableRow;
 import android.widget.TextView;
 
@@ -34,8 +37,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+
 public class Standings extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, AdapterView.OnItemSelectedListener {
 
     int pixelWidth = 0;
 
@@ -51,7 +57,19 @@ public class Standings extends AppCompatActivity
         display.getSize(size);
         pixelWidth = size.x;
 
-        String presentStandingsUrl = "https://statsapi.web.nhl.com/api/v1/standings?season=20172018";
+        Bundle extras = getIntent().getExtras();
+
+        Spinner seasonChanger = findViewById(R.id.season_dropdown_list);
+        setSpinner(seasonChanger);
+        seasonChanger.setSelected(false);
+        seasonChanger.setSelection(extras == null ? 0 : extras.getInt("PREV_SELECTION"),false);
+        seasonChanger.setOnItemSelectedListener(this);
+
+        String SeasonToShow = extras != null ? extras.getString("SeasonToShow") : setCurrentYear();
+
+        String SeasonToQueryAPI = SeasonToShow.substring(0,4) + SeasonToShow.substring(7);
+
+        String presentStandingsUrl = "https://statsapi.web.nhl.com/api/v1/standings?season=" + SeasonToQueryAPI;
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, presentStandingsUrl, null, new Response.Listener<JSONObject>() {
             @Override
@@ -79,6 +97,45 @@ public class Standings extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view,
+                               int pos, long id) {
+
+        String season = parent.getItemAtPosition(pos).toString();
+        Intent intent = new Intent(getApplicationContext(), Standings.class);
+        intent.putExtra("SeasonToShow", season);
+        intent.putExtra("PREV_SELECTION", pos);
+        startActivity(intent);
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> arg0) {
+        return;
+    }
+
+    private String setCurrentYear(){
+        int thisYear = Calendar.getInstance().get(Calendar.YEAR);
+        int thisMonth = Calendar.getInstance().get(Calendar.MONTH);
+        thisYear = thisMonth < 9 ? thisYear - 1 : thisYear;
+
+        return Integer.toString(thisYear) + " - " + Integer.toString(thisYear + 1);
+    }
+
+    private void setSpinner(Spinner seasonChanger){
+        ArrayList<String> years = new ArrayList<String>();
+        int thisYear = Calendar.getInstance().get(Calendar.YEAR);
+        int thisMonth = Calendar.getInstance().get(Calendar.MONTH);
+        thisYear = thisMonth < 9 ? thisYear - 1 : thisYear;
+        int nextYear;
+        for (int i = thisYear; i >= 1999; i--) {
+            nextYear = i + 1;
+            years.add(Integer.toString(i) + " - " + Integer.toString(nextYear));
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, years);
+
+        seasonChanger.setAdapter(adapter);
     }
 
     private void makeStandingsByDivision(JSONObject response){
@@ -366,16 +423,16 @@ public class Standings extends AppCompatActivity
     }
 
     private int mainColumnSpacing(){
-        int toReturn = 0;
-        switch(pixelWidth){
-            case 1440: toReturn = 150;
-                break;
-            case 1080: toReturn = 112;
-                break;
-            case 720: toReturn = 75;
-            default: toReturn = 75;
+
+        if(pixelWidth >= 1440){
+            return 150;
+        }else if (pixelWidth >= 1080){
+            return 112;
+        }else if (pixelWidth >= 720) {
+            return 75;
         }
-        return toReturn;
+
+        return 75;
     }
 
     private void setLogo(String team, ImageView teamLogo){
@@ -390,16 +447,15 @@ public class Standings extends AppCompatActivity
     }
 
     private int logoWidthSpacing(){
-        int toReturn = 0;
-        switch(pixelWidth){
-            case 1440: toReturn = 130;
-                break;
-            case 1080: toReturn = 100;
-                break;
-            case 720: toReturn = 65;
-            default: toReturn = 63;
+        if(pixelWidth >= 1440){
+            return 130;
+        }else if (pixelWidth >= 1080){
+            return 100;
+        }else if (pixelWidth >= 720) {
+            return 65;
         }
-        return toReturn;
+
+        return 63;
     }
 
     @Override

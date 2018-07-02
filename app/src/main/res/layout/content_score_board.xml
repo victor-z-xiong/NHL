@@ -8,12 +8,12 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="no_name.nhl_app.ScoreBoard"
     tools:showIn="@layout/app_bar_score_board">
-    <android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <!--<android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/swipelayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="exceptionbound.com.swipelayoutrefresh.ScoreBoard">
+        tools:context="exceptionbound.com.swipelayoutrefresh.ScoreBoard">-->
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -92,5 +92,5 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_bias="1.0" />
         </LinearLayout>
-    </android.support.v4.widget.SwipeRefreshLayout>
+    <!--</android.support.v4.widget.SwipeRefreshLayout>-->
 </android.support.constraint.ConstraintLayout>
