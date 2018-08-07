@@ -572,6 +572,8 @@ public class BoxScore extends AppCompatActivity {
         teamLogoFileName = teamLogoFileName.replace(" ", "_");
         teamLogoFileName = teamLogoFileName.replace("é", "e");
         teamLogoFileName = teamLogoFileName.replace(".", "");
+        teamLogoFileName = teamLogoFileName.replace("(", "");
+        teamLogoFileName = teamLogoFileName.replace(")", "");
         int drawableID = getResources().getIdentifier(teamLogoFileName, "drawable", getPackageName());
         teamLogo.setImageResource(drawableID);
         teamLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);

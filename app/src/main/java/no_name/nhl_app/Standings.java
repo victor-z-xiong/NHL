@@ -224,14 +224,20 @@ public class Standings extends AppCompatActivity
         LinearLayout divisionContent = new LinearLayout(this);
         divisionContent.setOrientation(LinearLayout.VERTICAL);
         addDivisionTitle(division, divisionContent);
-        addTeamStatsHeader(divisionContent);
+        boolean hasTies = true;
         try{
 
+            if(Integer.parseInt(division.getString("season").substring(0,4)) < 2005) {
+                hasTies = true;
+            } else {
+                hasTies = false;
+            }
+            addTeamStatsHeader(divisionContent, hasTies);
             JSONArray teams = division.getJSONArray("teamRecords");
             JSONObject team;
             for(int i = 0; i < teams.length(); i++){
                 team = teams.getJSONObject(i);
-                testIfClinched(team, divisionContent);
+                testIfClinched(team, divisionContent, hasTies);
             }
 
             bigDivisionRow.addView(divisionContent);
@@ -241,7 +247,7 @@ public class Standings extends AppCompatActivity
         }
     }
 
-    private void testIfClinched(JSONObject team, LinearLayout divisionContent){
+    private void testIfClinched(JSONObject team, LinearLayout divisionContent, boolean hasTies){
         LinearLayout tableHead = new LinearLayout(this);
         TableRow row = new TableRow(this);
         TextView rank = new TextView(this);
@@ -261,20 +267,21 @@ public class Standings extends AppCompatActivity
 
             tableHead.addView(clinched);
 
-            makeTeamRow(team, tableHead, true);
+            makeTeamRow(team, tableHead, true, hasTies);
         } catch (JSONException e) {
-            makeTeamRow(team, tableHead, false);
+            makeTeamRow(team, tableHead, false, hasTies);
         }
         row.addView(tableHead);
         divisionContent.addView(row);
     }
 
-    private void makeTeamRow(JSONObject team, LinearLayout tableHead, boolean madePlayOffs){
+    private void makeTeamRow(JSONObject team, LinearLayout tableHead, boolean madePlayOffs, boolean hasTies){
         TextView clinched = new TextView(this);
         TextView gamesPlayed = new TextView(this);
         TextView wins = new TextView(this);
         TextView losses = new TextView(this);
         TextView ot = new TextView(this);
+        TextView tie = new TextView(this);
         TextView points = new TextView(this);
         TextView ROW = new TextView(this);
         TextView  GA = new TextView(this);
@@ -299,6 +306,11 @@ public class Standings extends AppCompatActivity
 
             ot.setText(team.getJSONObject("leagueRecord").getString("ot"));
             setTitleParams(ot, mainColumnSpacing(), false);
+
+            if(hasTies){
+                tie.setText(team.getJSONObject("leagueRecord").getString("ties"));
+                setTitleParams(tie, mainColumnSpacing(), false);
+            }
 
             points.setText(team.getString("points"));
             setTitleParams(points, mainColumnSpacing(), false);
@@ -331,6 +343,9 @@ public class Standings extends AppCompatActivity
         tableHead.addView(wins);
         tableHead.addView(losses);
         tableHead.addView(ot);
+        if(hasTies){
+            tableHead.addView(tie);
+        }
         tableHead.addView(points);
         tableHead.addView(ROW);
         tableHead.addView(GA);
@@ -339,7 +354,7 @@ public class Standings extends AppCompatActivity
         tableHead.addView(streak);
     }
 
-    private void addTeamStatsHeader(LinearLayout divisionContent){
+    private void addTeamStatsHeader(LinearLayout divisionContent, boolean hasTies){
         LinearLayout tableHead = new LinearLayout(this);
         TableRow row = new TableRow(this);
         TextView rank = new TextView(this);
@@ -349,6 +364,7 @@ public class Standings extends AppCompatActivity
         TextView wins = new TextView(this);
         TextView losses = new TextView(this);
         TextView ot = new TextView(this);
+        TextView tie = new TextView(this);
         TextView points = new TextView(this);
         TextView ROW = new TextView(this);
         TextView  GA = new TextView(this);
@@ -377,6 +393,11 @@ public class Standings extends AppCompatActivity
         ot.setText("OTL");
         setTitleParams(ot, mainColumnSpacing(), true);
 
+        if(hasTies){
+            tie.setText("T");
+            setTitleParams(tie, mainColumnSpacing(), true);
+        }
+
         points.setText("PTS");
         setTitleParams(points, mainColumnSpacing(), true);
 
@@ -402,6 +423,9 @@ public class Standings extends AppCompatActivity
         tableHead.addView(wins);
         tableHead.addView(losses);
         tableHead.addView(ot);
+        if(hasTies){
+            tableHead.addView(tie);
+        }
         tableHead.addView(points);
         tableHead.addView(ROW);
         tableHead.addView(GA);
@@ -440,6 +464,8 @@ public class Standings extends AppCompatActivity
         teamLogoFileName = teamLogoFileName.replace(" ", "_");
         teamLogoFileName = teamLogoFileName.replace("é", "e");
         teamLogoFileName = teamLogoFileName.replace(".", "");
+        teamLogoFileName = teamLogoFileName.replace("(", "");
+        teamLogoFileName = teamLogoFileName.replace(")", "");
         int drawableID = getResources().getIdentifier(teamLogoFileName, "drawable", getPackageName());
         teamLogo.setLayoutParams(new LinearLayout.LayoutParams(logoWidthSpacing(),LinearLayout.LayoutParams.MATCH_PARENT));
         teamLogo.setImageResource(drawableID);
