@@ -99,7 +99,7 @@ public class Player extends AppCompatActivity {
             makeCareerStatRow(statsYearByYear.getJSONObject(0), statsTable, true, 1);
 
         }catch (JSONException e){
-            System.out.println("Something wrong");
+            System.out.println("setPlayerCareerStatsTotal method in Player.java error");
         }
     }
 
@@ -115,7 +115,7 @@ public class Player extends AppCompatActivity {
 
             }
         }catch (JSONException e){
-            System.out.println("Something wrong");
+            System.out.println("setPlayerCareerStats method in Player.java error");
         }
     }
 
@@ -167,7 +167,7 @@ public class Player extends AppCompatActivity {
             plusMinus.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("plusMinus")));
             setTitleParams(plusMinus, mainColumnSpacing(), false);
         } catch (JSONException e ){
-            System.out.println("Something went wrong");
+            System.out.println("makeCareerStatRow method in player.java error");
         }
 
         if(rowNum % 2 == 0){

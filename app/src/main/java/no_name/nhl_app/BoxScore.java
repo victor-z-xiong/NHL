@@ -1,5 +1,6 @@
 package no_name.nhl_app;
 
+import android.app.ActionBar;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -14,6 +15,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -29,9 +31,11 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class BoxScore extends AppCompatActivity {
 
@@ -59,6 +63,7 @@ public class BoxScore extends AppCompatActivity {
                 makeMiddleLayer(response, true);
                 makeMiddleLayer(response, false);
                 makeScoringSummary(response, url);
+                makeTeamSummary(response);
 
             }
         }, new Response.ErrorListener() {
@@ -71,6 +76,298 @@ public class BoxScore extends AppCompatActivity {
 
 
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
+    }
+
+    private void makeTeamSummary(JSONObject response){
+        try{
+            LinearLayout ll = (LinearLayout) findViewById(R.id.scoring_summary);
+            addTeamSummaryBanner(ll);
+            HorizontalScrollView teamSummaryView = new HorizontalScrollView(this);
+            LinearLayout llForTeamSummaryView = new LinearLayout(this);
+            llForTeamSummaryView.setOrientation(LinearLayout.VERTICAL);
+            JSONObject awayTeamObject = response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams").getJSONObject("away");
+            JSONObject homeTeamObject = response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams").getJSONObject("home");
+            makeIndividualTeamSummary(awayTeamObject, llForTeamSummaryView);
+            makeIndividualTeamSummary(homeTeamObject, llForTeamSummaryView);
+            teamSummaryView.addView(llForTeamSummaryView);
+            ll.addView(teamSummaryView);
+        }catch(JSONException e){
+            System.out.println("makeTeamSummary method in BoxScore.java exception");
+        }
+    }
+
+    private void makeIndividualTeamSummary(JSONObject teamObject, LinearLayout scoringSummary){
+        try{
+            String teamName = teamObject.getJSONObject("team").getString("name");
+            addTeamTitleToTeamStatsSummary(scoringSummary, teamName);
+            JSONObject players = teamObject.getJSONObject("players");
+            addTeamStatSummaryHeader(scoringSummary);
+            int counterForAlternatingRowColor = 0;
+            for(int i = 0; i < players.names().length(); i++){
+                JSONObject player = (JSONObject) players.get(players.names().getString(i));
+                if(player.getJSONObject("stats").length() != 0){
+                    if(!player.getJSONObject("position").getString("name").equals("Goalie")){
+                        addPlayerStatToTeamSummary(player, scoringSummary, counterForAlternatingRowColor);
+                        counterForAlternatingRowColor++;
+                    }
+                }
+            }
+            LinearLayout spacerRow = new LinearLayout(this);
+            TextView space = new TextView(this);
+            spacerRow.addView(space);
+            scoringSummary.addView(spacerRow);
+        } catch (JSONException e){
+            System.out.println("makeIndividualTeamSummary method Boxscore.java exception");
+        }
+    }
+
+    private void addTeamStatSummaryHeader(LinearLayout scoringSummary){
+        LinearLayout tableHead = new LinearLayout(this);
+        TableRow row = new TableRow(this);
+        TextView playerName = new TextView(this);
+        TextView position = new TextView(this);
+        TextView toi = new TextView(this);
+        TextView goals = new TextView(this);
+        TextView assists = new TextView(this);
+        TextView shotsOnGoal = new TextView(this);
+        TextView hits = new TextView(this);
+        TextView plusMinus = new TextView(this);
+        TextView blockedShots = new TextView(this);
+        TextView penaltyMinutes = new TextView(this);
+        TextView evenTOI= new TextView(this);
+        TextView powerPlayTOI= new TextView(this);
+        TextView shortHandedTOI= new TextView(this);
+        TextView powerPlayGoals = new TextView(this);
+        TextView powerPlayAssists = new TextView(this);
+        TextView faceOffPct = new TextView(this);
+        TextView faceOffWins = new TextView(this);
+
+        playerName.setText("Name");
+        setTitleParams(playerName, teamNameSpacing(), true);
+        playerName.setGravity(Gravity.LEFT);
+
+        position.setText("POS");
+        setTitleParams(position, mainColumnSpacing(), true);
+
+        toi.setText("TOI");
+        setTitleParams(toi, mainColumnSpacing(), true);
+
+        goals.setText("G");
+        setTitleParams(goals, mainColumnSpacing(), true);
+
+        assists.setText("A");
+        setTitleParams(assists, mainColumnSpacing(), true);
+
+        shotsOnGoal.setText("SOG");
+        setTitleParams(shotsOnGoal, mainColumnSpacing(), true);
+
+        hits.setText("Hits");
+        setTitleParams(hits, mainColumnSpacing(), true);
+
+        plusMinus.setText("+/-");
+        setTitleParams(plusMinus, mainColumnSpacing(), true);
+
+        blockedShots.setText("BLKS");
+        setTitleParams(blockedShots, mainColumnSpacing(), true);
+
+        penaltyMinutes.setText("PIM");
+        setTitleParams(penaltyMinutes, mainColumnSpacing(), true);
+
+        evenTOI.setText("eTOI");
+        setTitleParams(evenTOI, mainColumnSpacing(), true);
+
+        powerPlayTOI.setText("PPT");
+        setTitleParams(powerPlayTOI, mainColumnSpacing(), true);
+
+        shortHandedTOI.setText("SHT");
+        setTitleParams(shortHandedTOI, mainColumnSpacing(), true);
+
+        powerPlayGoals.setText("PPG");
+        setTitleParams(powerPlayGoals, mainColumnSpacing(), true);
+
+        powerPlayAssists.setText("PPA");
+        setTitleParams(powerPlayAssists, mainColumnSpacing(), true);
+
+        faceOffPct.setText("F/O%");
+        setTitleParams(faceOffPct, mainColumnSpacing(), true);
+
+        faceOffWins.setText("F/O(w)");
+        setTitleParams(faceOffWins, mainColumnSpacing(), true);
+
+        tableHead.addView(playerName);
+        tableHead.addView(position);
+        tableHead.addView(toi);
+        tableHead.addView(goals);
+        tableHead.addView(assists);
+        tableHead.addView(shotsOnGoal);
+        tableHead.addView(hits);
+        tableHead.addView(plusMinus);
+        tableHead.addView(blockedShots);
+        tableHead.addView(evenTOI);
+        tableHead.addView(powerPlayTOI);
+        tableHead.addView(shortHandedTOI);
+        tableHead.addView(powerPlayGoals);
+        tableHead.addView(powerPlayAssists);
+        tableHead.addView(faceOffPct);
+        tableHead.addView(faceOffWins);
+
+        row.addView(tableHead);
+        scoringSummary.addView(row);
+    }
+
+
+    private void addPlayerStatToTeamSummary(JSONObject playerObject, LinearLayout scoringSummary, int rowNum){
+        LinearLayout horizontalRow = new LinearLayout(this);
+        TableRow row = new TableRow(this);
+        TextView playerName = new TextView(this);
+        TextView position = new TextView(this);
+        TextView toi = new TextView(this);
+        TextView goals = new TextView(this);
+        TextView assists = new TextView(this);
+        TextView shotsOnGoal = new TextView(this);
+        TextView hits = new TextView(this);
+        TextView plusMinus = new TextView(this);
+        TextView blockedShots = new TextView(this);
+        TextView penaltyMinutes = new TextView(this);
+        TextView evenTOI= new TextView(this);
+        TextView powerPlayTOI= new TextView(this);
+        TextView shortHandedTOI= new TextView(this);
+        TextView powerPlayGoals = new TextView(this);
+        TextView powerPlayAssists = new TextView(this);
+        TextView faceOffPct = new TextView(this);
+        TextView faceOffWins = new TextView(this);
+
+        try{
+            idMaker++;
+            JSONObject skaterStats = playerObject.getJSONObject("stats").getJSONObject("skaterStats");
+            String playerUrl = playerObject.getJSONObject("person").getString("link");
+            String name = playerObject.getJSONObject("person").getString("fullName");
+
+            playerName.setText(name);
+            setTitleParams(playerName, teamNameSpacing(), false);
+            playerName.setGravity(Gravity.LEFT);
+            playerName.setId(17*idMaker+31);
+            idToPlayerURL.put(17*idMaker+31, playerUrl);
+            idToPlayerName.put(17*idMaker+31, name);
+            playerName.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    launchPlayerPage(view.getId());
+                }
+            });
+
+            position.setText(playerObject.getJSONObject("position").getString("abbreviation"));
+            setTitleParams(position, mainColumnSpacing(), false);
+
+            toi.setText(skaterStats.getString("timeOnIce"));
+            setTitleParams(toi, mainColumnSpacing(), false);
+
+            goals.setText(Integer.toString(skaterStats.getInt("goals")));
+            setTitleParams(goals, mainColumnSpacing(), false);
+
+            assists.setText(Integer.toString(skaterStats.getInt("assists")));
+            setTitleParams(assists, mainColumnSpacing(), false);
+
+            shotsOnGoal.setText(Integer.toString(skaterStats.getInt("shots")));
+            setTitleParams(shotsOnGoal, mainColumnSpacing(), false);
+
+            hits.setText(Integer.toString(skaterStats.getInt("hits")));
+            setTitleParams(hits, mainColumnSpacing(), false);
+
+            plusMinus.setText(Integer.toString(skaterStats.getInt("plusMinus")));
+            setTitleParams(plusMinus, mainColumnSpacing(), false);
+
+            blockedShots.setText(Integer.toString(skaterStats.getInt("blocked")));
+            setTitleParams(blockedShots, mainColumnSpacing(), false);
+
+            penaltyMinutes.setText(Integer.toString(skaterStats.getInt("penaltyMinutes")));
+            setTitleParams(penaltyMinutes, mainColumnSpacing(), false);
+
+            evenTOI.setText(skaterStats.getString("evenTimeOnIce"));
+            setTitleParams(evenTOI, mainColumnSpacing(), false);
+
+            powerPlayTOI.setText(skaterStats.getString("powerPlayTimeOnIce"));
+            setTitleParams(powerPlayTOI, mainColumnSpacing(), false);
+
+            shortHandedTOI.setText(skaterStats.getString("shortHandedTimeOnIce"));
+            setTitleParams(shortHandedTOI, mainColumnSpacing(), false);
+
+            powerPlayGoals.setText(Integer.toString(skaterStats.getInt("powerPlayGoals")));
+            setTitleParams(powerPlayGoals, mainColumnSpacing(), false);
+
+            powerPlayAssists.setText(Integer.toString(skaterStats.getInt("powerPlayAssists")));
+            setTitleParams(powerPlayAssists, mainColumnSpacing(), false);
+
+            faceOffPct.setText(Integer.toString(skaterStats.getInt("faceOffPct")));
+            setTitleParams(faceOffPct, mainColumnSpacing(), false);
+
+            faceOffWins.setText(Integer.toString(skaterStats.getInt("faceOffWins")));
+            setTitleParams(faceOffWins, mainColumnSpacing(), false);
+
+        } catch (JSONException e){
+            System.out.println("makeIndividualTeamSummary method Boxscore.java exception");
+        }
+
+        if(rowNum % 2 == 0){
+            playerName.setTextColor(Color.WHITE);
+            position.setTextColor(Color.WHITE);
+            toi.setTextColor(Color.WHITE);
+            goals.setTextColor(Color.WHITE);
+            assists.setTextColor(Color.WHITE);
+            shotsOnGoal.setTextColor(Color.WHITE);
+            hits.setTextColor(Color.WHITE);
+            plusMinus.setTextColor(Color.WHITE);
+            blockedShots.setTextColor(Color.WHITE);
+            evenTOI.setTextColor(Color.WHITE);
+            powerPlayTOI.setTextColor(Color.WHITE);
+            shortHandedTOI.setTextColor(Color.WHITE);
+            powerPlayGoals.setTextColor(Color.WHITE);
+            powerPlayAssists.setTextColor(Color.WHITE);
+            faceOffPct.setTextColor(Color.WHITE);
+            faceOffWins.setTextColor(Color.WHITE);
+            row.setBackgroundColor(Color.GRAY);
+        }
+
+        horizontalRow.addView(playerName);
+        horizontalRow.addView(position);
+        horizontalRow.addView(toi);
+        horizontalRow.addView(goals);
+        horizontalRow.addView(assists);
+        horizontalRow.addView(shotsOnGoal);
+        horizontalRow.addView(hits);
+        horizontalRow.addView(plusMinus);
+        horizontalRow.addView(blockedShots);
+        horizontalRow.addView(evenTOI);
+        horizontalRow.addView(powerPlayTOI);
+        horizontalRow.addView(shortHandedTOI);
+        horizontalRow.addView(powerPlayGoals);
+        horizontalRow.addView(powerPlayAssists);
+        horizontalRow.addView(faceOffPct);
+        horizontalRow.addView(faceOffWins);
+
+        row.addView(horizontalRow);
+        scoringSummary.addView(row);
+    }
+
+    private void addTeamTitleToTeamStatsSummary(LinearLayout scoringSummary, String teamName){
+        LinearLayout teamSummaryBanner = new LinearLayout(this);
+        TextView teamSummaryText = new TextView(this);
+        teamSummaryText.setText(teamName);
+        teamSummaryText.setTextSize(14);
+        teamSummaryText.setTypeface(null, Typeface.BOLD);
+        teamSummaryBanner.addView(teamSummaryText);
+        scoringSummary.addView(teamSummaryBanner);
+    }
+
+    private void addTeamSummaryBanner(LinearLayout scoringSummary){
+        LinearLayout teamSummaryBanner = new LinearLayout(this);
+        TextView teamSummaryText = new TextView(this);
+        teamSummaryText.setText("Team Summary");
+        teamSummaryText.setTextSize(18);
+        teamSummaryText.setTypeface(null, Typeface.BOLD);
+        teamSummaryText.setGravity(Gravity.CENTER);
+        teamSummaryBanner.addView(teamSummaryText);
+        scoringSummary.addView(teamSummaryBanner);
     }
 
     private void makeScoringSummary(JSONObject response, String url){
@@ -670,6 +967,41 @@ public class BoxScore extends AppCompatActivity {
         }
 
         return description;
+    }
+
+    private void setTitleParams(TextView headerTitle, int width, boolean bold){
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width, ActionBar.LayoutParams.WRAP_CONTENT);
+        headerTitle.setGravity(Gravity.CENTER);
+        headerTitle.setLayoutParams(params);
+        if(bold){
+            headerTitle.setTypeface(null, Typeface.BOLD);
+        }
+    }
+
+    private int mainColumnSpacing(){
+
+        if(pixelWidth >= 1440){
+            return 150;
+        }else if (pixelWidth >= 1080){
+            return 112;
+        }else if (pixelWidth >= 720) {
+            return 75;
+        }
+
+        return 75;
+    }
+
+    private int teamNameSpacing(){
+
+        if(pixelWidth >= 1440){
+            return 400;
+        }else if (pixelWidth >= 1080){
+            return 300;
+        }else if (pixelWidth >= 720) {
+            return 200;
+        }
+
+        return 200;
     }
 
     private void launchPlayerPage(int textId){
