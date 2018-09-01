@@ -129,7 +129,7 @@ public class Standings extends AppCompatActivity
         int thisMonth = Calendar.getInstance().get(Calendar.MONTH);
         thisYear = thisMonth < 9 ? thisYear - 1 : thisYear;
         int nextYear;
-        for (int i = thisYear; i >= 1999; i--) {
+        for (int i = thisYear; i >= 1917; i--) {
             nextYear = i + 1;
             years.add(Integer.toString(i) + " - " + Integer.toString(nextYear));
         }
@@ -148,12 +148,12 @@ public class Standings extends AppCompatActivity
         try{
             JSONArray divisions = response.getJSONArray("records");
             addSeasonBanner(divisions, Season, standingsContent);
-            addConferenceBanner("Eastern Conference", easternConference);
-            addConferenceBanner("Western Conference", westernConference);
             JSONObject division;
 
             division = divisions.getJSONObject(0);
             if(division.getJSONObject("conference") != null){
+                addConferenceBanner("Eastern Conference", easternConference);
+                addConferenceBanner("Western Conference", westernConference);
 
                 for(int i = 0; i < divisions.length(); i++){
                     division = divisions.getJSONObject(i);
@@ -172,6 +172,17 @@ public class Standings extends AppCompatActivity
 
         } catch (JSONException e) {
             System.out.println("makeStandingsByDivision JSON Exception");
+            addConferenceBanner("NHL", easternConference);
+            try{
+                JSONArray divisions = response.getJSONArray("records");
+                for(int i = 0; i < divisions.length(); i++){
+                    JSONObject division = divisions.getJSONObject(i);
+                    makeDivisionLayout(division, easternConference);
+                }
+                standingsContent.addView(easternConference);
+            }catch(JSONException exception){
+                System.out.println("Second makeStandingsByDivision JSon exception lollll");
+            }
         }
 
     }
@@ -195,8 +206,10 @@ public class Standings extends AppCompatActivity
         title.setTextColor(Color.WHITE);
         if(confTitle.equals("Eastern Conference")){     
             title.setBackgroundColor(Color.RED);
-        }else{
+        }else if (confTitle.equals("Western Conference")){
             title.setBackgroundColor(Color.BLUE);
+        }else{
+            title.setBackgroundColor(Color.GRAY);
         }
         title.setTextSize(14);
         title.setTypeface(null, Typeface.BOLD);
@@ -298,20 +311,33 @@ public class Standings extends AppCompatActivity
             gamesPlayed.setText(team.getString("gamesPlayed"));
             setTitleParams(gamesPlayed, mainColumnSpacing(), false);
 
+            int gp = Integer.parseInt(team.getString("gamesPlayed"));
+            int w = Integer.parseInt(team.getJSONObject("leagueRecord").getString("wins"));
+            int l = Integer.parseInt(team.getJSONObject("leagueRecord").getString("losses"));
+            int loserPoints = gp - w - l;
+            int p = w * 2 + loserPoints;;
+
             wins.setText(team.getJSONObject("leagueRecord").getString("wins"));
             setTitleParams(wins, mainColumnSpacing(), false);
 
             losses.setText(team.getJSONObject("leagueRecord").getString("losses"));
             setTitleParams(losses, mainColumnSpacing(), false);
 
-            ot.setText(team.getJSONObject("leagueRecord").getString("ot"));
-            setTitleParams(ot, mainColumnSpacing(), false);
+            try{
+                ot.setText(team.getJSONObject("leagueRecord").getString("ot"));
+                setTitleParams(ot, mainColumnSpacing(), false);
+            }
+            catch(JSONException e){
+                ot.setText("");
+                setTitleParams(ot, mainColumnSpacing(), false);
+            }
 
             if(hasTies){
                 tie.setText(team.getJSONObject("leagueRecord").getString("ties"));
                 setTitleParams(tie, mainColumnSpacing(), false);
             }
 
+            String totalPoints = team.getString("points").length() == 0 ? Integer.toString(p) : team.getString("points");
             points.setText(team.getString("points"));
             setTitleParams(points, mainColumnSpacing(), false);
 
