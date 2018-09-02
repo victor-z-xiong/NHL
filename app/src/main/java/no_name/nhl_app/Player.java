@@ -336,9 +336,14 @@ public class Player extends AppCompatActivity {
             playerNameText.setTextSize(playerName.length() > 17 ? 18 : 20);
             playerNameText.setGravity(Gravity.CENTER);
             playerNameText.setTypeface(null, Typeface.BOLD);
-
-            String teamName = player.getJSONObject("currentTeam").getString("name");
-            setLogo(teamName, playerTeamLogo);
+            String teamName="";
+            try{
+                teamName = player.getJSONObject("currentTeam").getString("name");
+                setLogo(teamName, playerTeamLogo);
+            }catch(JSONException e){
+                teamName = "Retired";
+                setLogo("nhl", playerTeamLogo);
+            }
 
             playerTeamText.setText(teamName);
             if(teamName.length() > 18){
@@ -348,10 +353,17 @@ public class Player extends AppCompatActivity {
             }
             playerTeamText.setGravity(Gravity.CENTER);
 
+            String currentAge = "";
+            try{
+                currentAge = Integer.toString(player.getInt("currentAge"));
+            }catch(JSONException exception){
+                currentAge = "N/A";
+            }
+
             playerPositionText.setText(player.getJSONObject("primaryPosition").getString("abbreviation")
                                         + " | " + Integer.toString(player.getInt("weight")) + " lb"
                                         + " | " + player.getString("height")
-                                        + " | Age: " + Integer.toString(player.getInt("currentAge")));
+                                        + " | Age: " + currentAge);
             playerPositionText.setTextSize(pixelWidth >= 1080 ? 20 : 17);
             playerPositionText.setGravity(Gravity.CENTER);
             playerPositionText.setLayoutParams(params);
@@ -366,7 +378,7 @@ public class Player extends AppCompatActivity {
             playerShootsCatches.setTextSize(20);
 
         } catch (JSONException e){
-            System.out.println("Something went wrong");
+            System.out.println("setPlayerProfile in Player.java error");
         }
     }
 
