@@ -22,6 +22,7 @@ import android.widget.ScrollView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.support.v4.widget.SwipeRefreshLayout;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -76,6 +77,20 @@ public class BoxScore extends AppCompatActivity {
 
 
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
+
+        final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipelayout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                launchBoxScore(url);
+            }
+        });
+    }
+
+    private void launchBoxScore(String url){
+        Intent intent = new Intent(getApplicationContext(), BoxScore.class);
+        intent.putExtra("BOX_SCORE_URL", url);
+        startActivity(intent);
     }
 
     private void makeTeamSummary(JSONObject response){
@@ -101,21 +116,25 @@ public class BoxScore extends AppCompatActivity {
             String teamName = teamObject.getJSONObject("team").getString("name");
             addTeamTitleToTeamStatsSummary(scoringSummary, teamName);
             JSONObject players = teamObject.getJSONObject("players");
-            addTeamStatSummaryHeader(scoringSummary);
-            int counterForAlternatingRowColor = 0;
-            for(int i = 0; i < players.names().length(); i++){
-                JSONObject player = (JSONObject) players.get(players.names().getString(i));
-                if(player.getJSONObject("stats").length() != 0){
-                    if(!player.getJSONObject("position").getString("name").equals("Goalie")){
-                        addPlayerStatToTeamSummary(player, scoringSummary, counterForAlternatingRowColor);
-                        counterForAlternatingRowColor++;
+            String test = players.toString();
+            int length = players.length();
+            if(players.length() != 0){
+                addTeamStatSummaryHeader(scoringSummary);
+                int counterForAlternatingRowColor = 0;
+                for(int i = 0; i < players.names().length(); i++){
+                    JSONObject player = (JSONObject) players.get(players.names().getString(i));
+                    if(player.getJSONObject("stats").length() != 0){
+                        if(!player.getJSONObject("position").getString("name").equals("Goalie")){
+                            addPlayerStatToTeamSummary(player, scoringSummary, counterForAlternatingRowColor);
+                            counterForAlternatingRowColor++;
+                        }
                     }
                 }
+                LinearLayout spacerRow = new LinearLayout(this);
+                TextView space = new TextView(this);
+                spacerRow.addView(space);
+                scoringSummary.addView(spacerRow);
             }
-            LinearLayout spacerRow = new LinearLayout(this);
-            TextView space = new TextView(this);
-            spacerRow.addView(space);
-            scoringSummary.addView(spacerRow);
         } catch (JSONException e){
             System.out.println("makeIndividualTeamSummary method Boxscore.java exception");
         }
