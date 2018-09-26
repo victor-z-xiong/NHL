@@ -34,6 +34,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -43,6 +44,7 @@ public class BoxScore extends AppCompatActivity {
     String triCodeAway = "";
     String triCodeHome = "";
     int pixelWidth = 0;
+    Boolean hasHighlights = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -116,29 +118,237 @@ public class BoxScore extends AppCompatActivity {
             String teamName = teamObject.getJSONObject("team").getString("name");
             addTeamTitleToTeamStatsSummary(scoringSummary, teamName);
             JSONObject players = teamObject.getJSONObject("players");
-            String test = players.toString();
-            int length = players.length();
             if(players.length() != 0){
                 addTeamStatSummaryHeader(scoringSummary);
-                int counterForAlternatingRowColor = 0;
-                for(int i = 0; i < players.names().length(); i++){
-                    JSONObject player = (JSONObject) players.get(players.names().getString(i));
-                    if(player.getJSONObject("stats").length() != 0){
-                        if(!player.getJSONObject("position").getString("name").equals("Goalie")){
-                            addPlayerStatToTeamSummary(player, scoringSummary, counterForAlternatingRowColor);
-                            counterForAlternatingRowColor++;
-                        }
-                    }
-                }
-                LinearLayout spacerRow = new LinearLayout(this);
-                TextView space = new TextView(this);
-                spacerRow.addView(space);
-                scoringSummary.addView(spacerRow);
+                addTeamPlayersToTeamSummary(scoringSummary, players);
+                addSpacerRow(scoringSummary);
+                addTeamTitleToTeamStatsSummary(scoringSummary, "Goalies");
+                addGoalieStatSummaryHeader(scoringSummary);
+                addTeamGoaliesToTeamSummary(scoringSummary, players);
+                addSpacerRow(scoringSummary);
             }
         } catch (JSONException e){
             System.out.println("makeIndividualTeamSummary method Boxscore.java exception");
         }
     }
+
+    private void addTeamGoaliesToTeamSummary(LinearLayout scoringSummary, JSONObject players){
+        try{
+            int counterForAlternatingRowColor = 0;
+            for(int i = 0; i < players.names().length(); i++){
+                JSONObject player = (JSONObject) players.get(players.names().getString(i));
+                if(player.getJSONObject("stats").length() != 0){
+                    if(player.getJSONObject("position").getString("name").equals("Goalie")){
+                        addGoalieStatToTeamSummary(player, scoringSummary, counterForAlternatingRowColor);
+                        counterForAlternatingRowColor++;
+                    }
+                }
+            }
+        }catch(JSONException e){
+            System.out.println("addTeamGoaliesToTeamSummary method Boxscore.java exception");
+        }
+    }
+
+    private void addTeamPlayersToTeamSummary(LinearLayout scoringSummary, JSONObject players){
+        try{
+            int counterForAlternatingRowColor = 0;
+            for(int i = 0; i < players.names().length(); i++){
+                JSONObject player = (JSONObject) players.get(players.names().getString(i));
+                if(player.getJSONObject("stats").length() != 0){
+                    if(!player.getJSONObject("position").getString("name").equals("Goalie")){
+                        addPlayerStatToTeamSummary(player, scoringSummary, counterForAlternatingRowColor);
+                        counterForAlternatingRowColor++;
+                    }
+                }
+            }
+        }catch(JSONException e){
+            System.out.println("addTeamPlayersToTeamSummary method Boxscore.java exception");
+        }
+    }
+
+    private void addSpacerRow(LinearLayout parentLayout)
+    {
+        LinearLayout spacerRow = new LinearLayout(this);
+        TextView space = new TextView(this);
+        spacerRow.addView(space);
+        parentLayout.addView(spacerRow);
+    }
+
+    private void addGoalieStatSummaryHeader(LinearLayout scoringSummary){
+        LinearLayout tableHead = new LinearLayout(this);
+        TableRow row = new TableRow(this);
+        TextView playerName = new TextView(this);
+        TextView position = new TextView(this);
+        TextView toi = new TextView(this);
+        TextView saves = new TextView(this);
+        TextView shots = new TextView(this);
+        TextView savePercentage = new TextView(this);
+        TextView ppSaves = new TextView(this);
+        TextView evenSaves = new TextView(this);
+        TextView shSA = new TextView(this);
+        TextView eSA = new TextView(this);
+        TextView ppSA= new TextView(this);
+        TextView eSP = new TextView(this);
+
+        playerName.setText("Name");
+        setTitleParams(playerName, teamNameSpacing(), true);
+        playerName.setGravity(Gravity.LEFT);
+
+        position.setText("POS");
+        setTitleParams(position, mainColumnSpacing(), true);
+
+        toi.setText("TOI");
+        setTitleParams(toi, mainColumnSpacing(), true);
+
+        saves.setText("Saves");
+        setTitleParams(saves, mainColumnSpacing(), true);
+
+        shots.setText("S");
+        setTitleParams(shots, mainColumnSpacing(), true);
+
+        savePercentage.setText("S%");
+        setTitleParams(savePercentage, mainColumnSpacing(), true);
+
+        ppSaves.setText("ppS");
+        setTitleParams(ppSaves, mainColumnSpacing(), true);
+
+        evenSaves.setText("eS");
+        setTitleParams(evenSaves, mainColumnSpacing(), true);
+
+        shSA.setText("shSA");
+        setTitleParams(shSA, mainColumnSpacing(), true);
+
+        eSA.setText("eSA");
+        setTitleParams(eSA, mainColumnSpacing(), true);
+
+        ppSA.setText("ppSA");
+        setTitleParams(ppSA, mainColumnSpacing(), true);
+
+        eSP.setText("eS%");
+        setTitleParams(eSP, mainColumnSpacing(), true);
+
+        tableHead.addView(playerName);
+        tableHead.addView(position);
+        tableHead.addView(toi);
+        tableHead.addView(saves);
+        tableHead.addView(shots);
+        tableHead.addView(savePercentage);
+        tableHead.addView(ppSaves);
+        tableHead.addView(evenSaves);
+        tableHead.addView(shSA);
+        tableHead.addView(eSA);
+        tableHead.addView(ppSA);
+        tableHead.addView(eSP);
+
+        row.addView(tableHead);
+        scoringSummary.addView(row);
+    }
+
+    private void addGoalieStatToTeamSummary(JSONObject playerObject, LinearLayout scoringSummary, int rowNum){
+        LinearLayout horizontalRow = new LinearLayout(this);
+        TableRow row = new TableRow(this);
+        TextView playerName = new TextView(this);
+        TextView position = new TextView(this);
+        TextView toi = new TextView(this);
+        TextView saves = new TextView(this);
+        TextView shots = new TextView(this);
+        TextView savePercentage = new TextView(this);
+        TextView ppSaves = new TextView(this);
+        TextView evenSaves = new TextView(this);
+        TextView shSA = new TextView(this);
+        TextView eSA = new TextView(this);
+        TextView ppSA= new TextView(this);
+        TextView eSP = new TextView(this);
+
+        try{
+            idMaker++;
+            JSONObject goalieStats = playerObject.getJSONObject("stats").getJSONObject("goalieStats");
+            String playerUrl = playerObject.getJSONObject("person").getString("link");
+            String name = playerObject.getJSONObject("person").getString("fullName");
+
+            playerName.setText(name);
+            setTitleParams(playerName, teamNameSpacing(), false);
+            playerName.setGravity(Gravity.LEFT);
+            playerName.setId(17*idMaker+31);
+            idToPlayerURL.put(17*idMaker+31, playerUrl);
+            idToPlayerName.put(17*idMaker+31, name);
+            playerName.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    launchPlayerPage(view.getId());
+                }
+            });
+
+            position.setText(playerObject.getJSONObject("position").getString("abbreviation"));
+            setTitleParams(position, mainColumnSpacing(), false);
+
+            toi.setText(goalieStats.getString("timeOnIce"));
+            setTitleParams(toi, mainColumnSpacing(), false);
+
+            saves.setText(Integer.toString(goalieStats.getInt("saves")));
+            setTitleParams(saves, mainColumnSpacing(), false);
+
+            shots.setText(Integer.toString(goalieStats.getInt("shots")));
+            setTitleParams(shots, mainColumnSpacing(), false);
+
+            savePercentage.setText(new DecimalFormat("#.##").format(goalieStats.getDouble("savePercentage")));
+            setTitleParams(savePercentage, mainColumnSpacing(), false);
+
+            ppSaves.setText(Integer.toString(goalieStats.getInt("powerPlaySaves")));
+            setTitleParams(ppSaves, mainColumnSpacing(), false);
+
+            evenSaves.setText(Integer.toString(goalieStats.getInt("evenSaves")));
+            setTitleParams(evenSaves, mainColumnSpacing(), false);
+
+            shSA.setText(Integer.toString(goalieStats.getInt("shortHandedShotsAgainst")));
+            setTitleParams(shSA, mainColumnSpacing(), false);
+
+            eSA.setText(Integer.toString(goalieStats.getInt("evenShotsAgainst")));
+            setTitleParams(eSA, mainColumnSpacing(), false);
+
+            ppSA.setText(Integer.toString(goalieStats.getInt("powerPlayShotsAgainst")));
+            setTitleParams(ppSA, mainColumnSpacing(), false);
+
+            eSP.setText(new DecimalFormat("#.##").format(goalieStats.getDouble("evenStrengthSavePercentage")));
+            setTitleParams(eSP, mainColumnSpacing(), false);
+
+        } catch (JSONException e){
+            System.out.println("makeIndividualTeamSummary method Boxscore.java exception");
+        }
+
+        if(rowNum % 2 == 0){
+            playerName.setTextColor(Color.WHITE);
+            position.setTextColor(Color.WHITE);
+            toi.setTextColor(Color.WHITE);
+            shots.setTextColor(Color.WHITE);
+            saves.setTextColor(Color.WHITE);
+            savePercentage.setTextColor(Color.WHITE);
+            ppSaves.setTextColor(Color.WHITE);
+            evenSaves.setTextColor(Color.WHITE);
+            shSA.setTextColor(Color.WHITE);
+            eSA.setTextColor(Color.WHITE);
+            ppSA.setTextColor(Color.WHITE);
+            eSP.setTextColor(Color.WHITE);
+            row.setBackgroundColor(Color.GRAY);
+        }
+
+        horizontalRow.addView(playerName);
+        horizontalRow.addView(position);
+        horizontalRow.addView(toi);
+        horizontalRow.addView(saves);
+        horizontalRow.addView(shots);
+        horizontalRow.addView(savePercentage);
+        horizontalRow.addView(ppSaves);
+        horizontalRow.addView(evenSaves);
+        horizontalRow.addView(shSA);
+        horizontalRow.addView(eSA);
+        horizontalRow.addView(ppSA);
+        horizontalRow.addView(eSP);
+
+        row.addView(horizontalRow);
+        scoringSummary.addView(row);
+    }
+
 
     private void addTeamStatSummaryHeader(LinearLayout scoringSummary){
         LinearLayout tableHead = new LinearLayout(this);
@@ -590,7 +800,9 @@ public class BoxScore extends AppCompatActivity {
                 rowMidLinearLayout.addView(afterAssistTwoText);
 
                 row2LinearLayout.addView(playTextLine2);
-                row2LinearLayout.addView(replayButton);
+                if(hasHighlights){
+                    row2LinearLayout.addView(replayButton);
+                }
 
                 row1.addView(row1LinearLayout);
                 row2.addView(row2LinearLayout);
@@ -665,6 +877,9 @@ public class BoxScore extends AppCompatActivity {
             JSONArray items = response.getJSONObject("highlights").getJSONObject("gameCenter").getJSONArray("items");
             int eventId = goalToEventID.get(gameId);
             JSONArray keywords;
+            if(items.length() == 0){
+                hasHighlights = false;
+            }
             for(int i = 0; i < items.length(); i++){
                 keywords = items.getJSONObject(i).getJSONArray("keywords");
                 for(int j = 0; j < keywords.length(); j++){

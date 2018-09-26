@@ -63,6 +63,7 @@ public class ScoreBoard extends AppCompatActivity
     int day, month, year;
     String currentPeriod = "";
     String periodTimeRemaining = "";
+    //HashMap<Integer, Integer> idTags = new HashMap<Integer, Integer>();
     ArrayList<Integer> idTags = new ArrayList<Integer>();
     int count = 0;
     ImageView goBackOneD, goFwdOneD;
@@ -366,13 +367,12 @@ public class ScoreBoard extends AppCompatActivity
     private void setLiveGameStateTimePeriod(final VolleyCallback callback, int i, JSONArray games){
         String url = getLiveGameFeedAndStatsLink(i, games);
         idTags.add(3*i+2);
-        count++;
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 setLGSTHelper(response);
-                count--;
                 callback.onSuccess(getPeriodTimeRemaining() + " " + getCurrentPeriod(), idTags.get(count));
+                count++;
             }
         }, new Response.ErrorListener() {
             @Override
