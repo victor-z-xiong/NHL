@@ -9,7 +9,7 @@ import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.view.ViewCompat;
-//import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.Display;
 import android.view.GestureDetector;
@@ -161,8 +161,8 @@ public class ScoreBoard extends AppCompatActivity
                 public void onRefresh() {
                     setDate(year, month, day);
                 }
-            });
-        */
+            });*/
+
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
@@ -224,6 +224,7 @@ public class ScoreBoard extends AppCompatActivity
     }
 
     HashMap<Integer, String> idToBoxScoreURL = new HashMap<Integer, String>();
+    HashMap<Integer, String> idToTeamName = new HashMap<Integer, String>();
 
     private void makeGameScoreTable(LinearLayout ll, String score, String team, String gameTime, int i, JSONArray games){
         TableRow row = new TableRow(this);
@@ -246,6 +247,14 @@ public class ScoreBoard extends AppCompatActivity
         teamLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
         teamLogo.setLayoutParams(new LinearLayout.LayoutParams(logoWidthSpacing(),LinearLayout.LayoutParams.MATCH_PARENT));
         teamLogo.setPadding(0,20,0,10);
+        teamLogo.setId(5*i+7);
+        idToTeamName.put(5*i+7, teamLogoFileName);
+        teamLogo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TeamLinkMapHelper.launchTeamSite(idToTeamName.get(view.getId()), view, view.getId());
+            }
+        });
 
         teamName.setText(team);
         teamName.setId(3*i);
@@ -257,7 +266,6 @@ public class ScoreBoard extends AppCompatActivity
         teamName.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 launchBoxScore(view.getId());
             }
         });
@@ -299,7 +307,17 @@ public class ScoreBoard extends AppCompatActivity
 
                     break;
                 default:
-                    gameTimeText.setText("Final");
+                    setLiveGameStateTimePeriod(new VolleyCallback() {
+                        @Override
+                        public void onSuccess(String result, int idTag) {
+                            gameTimeText = findViewById(idTag);
+                            if(result.indexOf("SO") > -1 || result.indexOf("OT") > -1){
+                                gameTimeText.setText(result);
+                            }else{
+                                gameTimeText.setText("Final");
+                            }
+                        }
+                    }, i, games);
             }
 
             gameTimeText.setId(3*i+2);
@@ -337,6 +355,17 @@ public class ScoreBoard extends AppCompatActivity
         }
 
         return 63;
+    }
+
+    private int noGameMsgTopPadding(){
+        if(pixelWidth >= 1440){
+            return 600;
+        }else if (pixelWidth >= 1080){
+            return 450;
+        }else if (pixelWidth >= 720){
+            return 300;
+        }
+        return 150;
     }
 
     private void setLGSTHelper(JSONObject response){
@@ -390,7 +419,7 @@ public class ScoreBoard extends AppCompatActivity
         TextView msg = new TextView(this);
         msg.setText("No games on this date");
         msg.setGravity(Gravity.CENTER);
-        msg.setPadding(0, 600, 0, 0);
+        msg.setPadding(0, noGameMsgTopPadding(), 0, 0);
         msg.setTextSize(24);
         ll.addView(msg);
     }

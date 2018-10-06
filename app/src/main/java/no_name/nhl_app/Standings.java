@@ -39,11 +39,13 @@ import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 
 public class Standings extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, AdapterView.OnItemSelectedListener {
 
     int pixelWidth = 0;
+    int i = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -485,7 +487,10 @@ public class Standings extends AppCompatActivity
         return 75;
     }
 
+    HashMap<Integer, String> idToTeamName = new HashMap<Integer, String>();
+
     private void setLogo(String team, ImageView teamLogo){
+        i++;
         String teamLogoFileName = team.toLowerCase();
         teamLogoFileName = teamLogoFileName.replace(" ", "_");
         teamLogoFileName = teamLogoFileName.replace("é", "e");
@@ -496,6 +501,14 @@ public class Standings extends AppCompatActivity
         teamLogo.setLayoutParams(new LinearLayout.LayoutParams(logoWidthSpacing(),LinearLayout.LayoutParams.MATCH_PARENT));
         teamLogo.setImageResource(drawableID);
         teamLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        teamLogo.setId(5*i+7);
+        idToTeamName.put(5*i+7, teamLogoFileName);
+        teamLogo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TeamLinkMapHelper.launchTeamSite(idToTeamName.get(view.getId()), view, view.getId());
+            }
+        });
     }
 
     private int logoWidthSpacing(){

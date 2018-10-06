@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableRow;
@@ -24,6 +25,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.DecimalFormat;
+import java.util.HashMap;
 
 public class Player extends AppCompatActivity {
 
@@ -310,6 +312,16 @@ public class Player extends AppCompatActivity {
             team.setText(total ? "NHL Totals" : statsForYear.getJSONObject("team").getString("name"));
             setTitleParams(team, teamNameSpacing(), false);
             team.setGravity(Gravity.LEFT);
+            i++;
+            team.setId(5*i+7);
+            idToTeamName.put(5*i+7, formatTeamName(statsForYear.getJSONObject("team").getString("name")));
+            team.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    TeamLinkMapHelper.launchTeamSite(idToTeamName.get(view.getId()), view, view.getId());
+                }
+            });
+
 
             games.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("games")));
             setTitleParams(games, mainColumnSpacing(), false);
@@ -491,6 +503,15 @@ public class Player extends AppCompatActivity {
             team.setText(total ? "NHL Totals" : statsForYear.getJSONObject("team").getString("name"));
             setTitleParams(team, teamNameSpacing(), false);
             team.setGravity(Gravity.LEFT);
+            i++;
+            team.setId(5*i+7);
+            idToTeamName.put(5*i+7, formatTeamName(statsForYear.getJSONObject("team").getString("name")));
+            team.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    TeamLinkMapHelper.launchTeamSite(idToTeamName.get(view.getId()), view, view.getId());
+                }
+            });
 
             gamesPlayed.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("games")));
             setTitleParams(gamesPlayed, mainColumnSpacing(), false);
@@ -751,15 +772,33 @@ public class Player extends AppCompatActivity {
         }
     }
 
+    int i = 0;
+    HashMap<Integer, String> idToTeamName = new HashMap<Integer, String>();
     private void setLogo(String team, ImageView teamLogo){
+        i++;
+        String teamLogoFileName = formatTeamName(team);
+        int drawableID = getResources().getIdentifier(teamLogoFileName, "drawable", getPackageName());
+        teamLogo.setImageResource(drawableID);
+        teamLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        teamLogo.setId(5*i+7);
+        idToTeamName.put(5*i+7, teamLogoFileName);
+        teamLogo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TeamLinkMapHelper.launchTeamSite(idToTeamName.get(view.getId()), view, view.getId());
+            }
+        });
+    }
+
+    private String formatTeamName(String team){
+
         String teamLogoFileName = team.toLowerCase();
         teamLogoFileName = teamLogoFileName.replace(" ", "_");
         teamLogoFileName = teamLogoFileName.replace("é", "e");
         teamLogoFileName = teamLogoFileName.replace(".", "");
         teamLogoFileName = teamLogoFileName.replace("(", "");
         teamLogoFileName = teamLogoFileName.replace(")", "");
-        int drawableID = getResources().getIdentifier(teamLogoFileName, "drawable", getPackageName());
-        teamLogo.setImageResource(drawableID);
-        teamLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        return teamLogoFileName;
     }
+
 }

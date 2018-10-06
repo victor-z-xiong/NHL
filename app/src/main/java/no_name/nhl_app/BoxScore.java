@@ -45,6 +45,7 @@ public class BoxScore extends AppCompatActivity {
     String triCodeHome = "";
     int pixelWidth = 0;
     Boolean hasHighlights = true;
+    int i = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -1098,7 +1099,9 @@ public class BoxScore extends AppCompatActivity {
         }
     }
 
+    HashMap<Integer, String> idToTeamName = new HashMap<Integer, String>();
     private void setLogo(String team, ImageView teamLogo){
+        i++;
         String teamLogoFileName = team.toLowerCase();
         teamLogoFileName = teamLogoFileName.replace(" ", "_");
         teamLogoFileName = teamLogoFileName.replace("é", "e");
@@ -1108,6 +1111,14 @@ public class BoxScore extends AppCompatActivity {
         int drawableID = getResources().getIdentifier(teamLogoFileName, "drawable", getPackageName());
         teamLogo.setImageResource(drawableID);
         teamLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        teamLogo.setId(5*i+7);
+        idToTeamName.put(5*i+7, teamLogoFileName);
+        teamLogo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                TeamLinkMapHelper.launchTeamSite(idToTeamName.get(view.getId()), view, view.getId());
+            }
+        });
     }
 
     private String getAbstractGameState(JSONObject response){
