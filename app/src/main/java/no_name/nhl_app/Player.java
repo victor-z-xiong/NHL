@@ -505,7 +505,7 @@ public class Player extends AppCompatActivity {
             team.setGravity(Gravity.LEFT);
             i++;
             team.setId(5*i+7);
-            idToTeamName.put(5*i+7, formatTeamName(statsForYear.getJSONObject("team").getString("name")));
+            idToTeamName.put(5*i+7, formatTeamName(total ? "NHL Totals" : statsForYear.getJSONObject("team").getString("name")));
             team.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
