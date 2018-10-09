@@ -205,7 +205,7 @@ public class ScoreBoard extends AppCompatActivity
                 displayNoGamesMsg(ll);
             }
 
-            for(int i = totalGames*2-1; i >=0 ; i--){
+            /*for(int i = totalGames*2-1; i >=0 ; i--){
 
                 JSONArray games = getGame(response);
                 String score = getScore(i, games);
@@ -214,6 +214,15 @@ public class ScoreBoard extends AppCompatActivity
 
                 makeGameScoreTable(ll, score, team, gameTime, i, games);
 
+            }*/
+
+            for(int i = 0; i < totalGames * 2 ; i++){
+                JSONArray games = getGame(response);
+                String score = getScore(i, games);
+                String team = getTeamName(i, games);
+                String gameTime = setGameTime(getGameDate(i, games), i);
+
+                makeGameScoreTable(ll, score, team, gameTime, i, games);
             }
 
             copyRight.setText(toDisplay);
@@ -247,8 +256,8 @@ public class ScoreBoard extends AppCompatActivity
         teamLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
         teamLogo.setLayoutParams(new LinearLayout.LayoutParams(logoWidthSpacing(),LinearLayout.LayoutParams.MATCH_PARENT));
         teamLogo.setPadding(0,20,0,10);
-        teamLogo.setId(5*i+7);
-        idToTeamName.put(5*i+7, teamLogoFileName);
+        teamLogo.setId(5*i+138);
+        idToTeamName.put(5*i+138, teamLogoFileName);
         teamLogo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -285,7 +294,7 @@ public class ScoreBoard extends AppCompatActivity
         row.addView(llForRow);
 
         ll.addView(row);
-        if(i % 2 == 0){
+        if(i % 2 == 1){
             TableRow gameTimeRow = new TableRow(this);
             TableRow spacerRow = new TableRow(this);
             gameTimeText = new TextView(this);

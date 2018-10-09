@@ -46,6 +46,7 @@ public class BoxScore extends AppCompatActivity {
     int pixelWidth = 0;
     Boolean hasHighlights = true;
     int i = 0;
+    String gameContentUrl = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,6 +59,7 @@ public class BoxScore extends AppCompatActivity {
 
         Bundle extras = getIntent().getExtras();
         final String url = extras.getString("BOX_SCORE_URL");
+        gameContentUrl = url.replace("feed/live", "content");
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
@@ -778,7 +780,7 @@ public class BoxScore extends AppCompatActivity {
                 unassistedText.setText("unassisted");
 
                 replayButton.setId(17*idMaker+37);
-                putReplayURLInHashMap(17*idMaker+37, url, scoringPlays.get(i));
+                putReplayURLInHashMap(17*idMaker+37, url, scoringPlays.get(i), replayButton);
                 replayButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -849,16 +851,17 @@ public class BoxScore extends AppCompatActivity {
 
     }
 
-    private void putReplayURLInHashMap(int replayIdImageView, String url, int goalId){
+    private void putReplayURLInHashMap(int replayIdImageView, String url, int goalId, final ImageView replayButton){
 
         String urlContent = url.substring(0, 52) + "content";
         final int goalID = goalId;
         final int replayIDImageView = replayIdImageView;
+        final ImageView replayButtonFinal = replayButton;
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, urlContent, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
 
-               goToGameContentURL(response, goalID, replayIDImageView);
+               goToGameContentURL(response, goalID, replayIDImageView, replayButtonFinal);
 
             }
         }, new Response.ErrorListener() {
@@ -866,6 +869,7 @@ public class BoxScore extends AppCompatActivity {
             public void onErrorResponse(VolleyError error) {
                 System.out.println("Something is wrong");
                 error.printStackTrace();
+                replayButtonFinal.setVisibility(View.GONE);
             }
         });
 
@@ -873,11 +877,12 @@ public class BoxScore extends AppCompatActivity {
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
     }
 
-    private void goToGameContentURL(JSONObject response, int gameId, int replayId){
+    private void goToGameContentURL(JSONObject response, int gameId, int replayId, ImageView replayButtonFinal){
         try{
             JSONArray items = response.getJSONObject("highlights").getJSONObject("gameCenter").getJSONArray("items");
             int eventId = goalToEventID.get(gameId);
             JSONArray keywords;
+            boolean replayFound = false;
             if(items.length() == 0){
                 hasHighlights = false;
             }
@@ -889,12 +894,17 @@ public class BoxScore extends AppCompatActivity {
                         if(Integer.parseInt(keywords.getJSONObject(j).getString("value")) == eventId){
                             String replayURL = items.getJSONObject(i).getJSONArray("playbacks").getJSONObject(9).getString("url");
                             idToReplayURL.put(replayId, replayURL);
+                            replayFound = true;
                         }
                     }
                 }
             }
+            if(!replayFound){
+                replayButtonFinal.setVisibility(View.GONE);
+            }
         } catch (JSONException e){
             System.out.println("Something is wrong");
+            replayButtonFinal.setVisibility(View.GONE);
         }
     }
 
@@ -910,7 +920,13 @@ public class BoxScore extends AppCompatActivity {
         TextView periodState = findViewById(R.id.period);
         TextView awayScore = findViewById(R.id.away_score);
         TextView homeScore = findViewById(R.id.home_score);
+
         try {
+            String periodStateText = "";
+            if(response.getJSONObject("liveData").getJSONObject("linescore").has("currentPeriodTimeRemaining")){
+                periodStateText = response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodTimeRemaining");
+            }
+
             JSONObject gameData = response.getJSONObject("gameData");
             JSONObject teams = gameData.getJSONObject("teams");
             setLogo(teams.getJSONObject("away").getString("name"), awayBig);
@@ -918,7 +934,7 @@ public class BoxScore extends AppCompatActivity {
 
             timeLeft.setText(response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodOrdinal"));
             timeLeft.setLayoutParams(params);
-            periodState.setText(response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodTimeRemaining"));
+            periodState.setText(periodStateText);
             periodState.setTextSize(pixelWidth >= 1080 ? 14 : 11);
             awayScore.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
                     .getJSONObject("away").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt("goals")));
@@ -932,10 +948,119 @@ public class BoxScore extends AppCompatActivity {
             homeScore.setLayoutParams(params);
             homeScore.setGravity(Gravity.CENTER);
             homeScore.setTypeface(null, Typeface.BOLD);
-
+            if(!periodStateText.equals("Final")){
+                hideHighlightsLayout();
+            }else{
+                goToGameContent();
+            }
         } catch (JSONException e){
-            System.out.println("Unexpected JSON exception");
+            System.out.println("makeBanner JSON exception BoxScore.java");
+            hideHighlightsLayout();
         }
+    }
+
+    private void hideHighlightsLayout(){
+        LinearLayout recapLayout = findViewById(R.id.recap_layout);
+        LinearLayout highlightLayout = findViewById(R.id.hightlight_layout);
+        recapLayout.setVisibility(View.GONE);
+        highlightLayout.setVisibility(View.GONE);
+    }
+
+    private void goToGameContent(){
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, gameContentUrl, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+                assignGameHighlightLinks(response);
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                System.out.println("addGameHighlightLinks BoxScore.java exception thrown");
+                error.printStackTrace();
+                hideHighlightsLayout();
+            }
+        });
+
+
+        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
+    }
+
+    String extendedHighlightsUrl = "";
+    String recapUrl = "";
+    private void assignGameHighlightLinks(JSONObject gameContentResponse){
+        TextView recapTextView = findViewById(R.id.Recap);
+        TextView highlightTextView = findViewById(R.id.ExtendedHighlights);
+
+        try{
+            JSONArray epg = gameContentResponse.getJSONObject("media").getJSONArray("epg");
+            JSONObject extendedHighlights = getExtendedHighlights(epg);
+            JSONObject recap = getRecap(epg);
+            extendedHighlightsUrl = extendedHighlights.getJSONArray("items").getJSONObject(0).getJSONArray("playbacks").getJSONObject(9).getString("url");
+            recapUrl = recap.getJSONArray("items").getJSONObject(0).getJSONArray("playbacks").getJSONObject(9).getString("url");
+
+            recapTextView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    launchHighlight(true);
+                }
+            });
+
+            highlightTextView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    launchHighlight(false);
+                }
+            });
+
+        }catch(JSONException e){
+            System.out.println("assignGameHighlightLinks exception BoxScore.java");
+            hideHighlightsLayout();
+        }
+    }
+
+    private JSONObject getExtendedHighlights(JSONArray epg){
+        try{
+            for(int i = 0; i < epg.length(); i++){
+                if(epg.getJSONObject(i).getString("title").equals("Extended Highlights")){
+                    return epg.getJSONObject(i);
+                }
+            }
+            hideHighlightsLayout();
+        }catch(JSONException e){
+            System.out.println("getExtendedHighlights exception BoxScore.java");
+            hideHighlightsLayout();
+        }
+
+        return null;
+    }
+
+    private JSONObject getRecap(JSONArray epg){
+        try{
+            for(int i = 0; i < epg.length(); i++){
+                if(epg.getJSONObject(i).getString("title").equals("Recap")){
+                    return epg.getJSONObject(i);
+                }
+            }
+            hideHighlightsLayout();
+        }catch(JSONException e){
+            System.out.println("getRecap exception BoxScore.java");
+            hideHighlightsLayout();
+        }
+
+        return null;
+    }
+
+    private void launchHighlight(boolean isRecap){
+
+        Intent intent = new Intent(getApplicationContext(), replayPlayer.class);
+        Bundle extras = new Bundle();
+        extras.putString("REPLAY_URL", isRecap? recapUrl : extendedHighlightsUrl);
+        intent.putExtras(extras);
+        startActivity(intent);
+
     }
 
     private void makeMiddleLayer(JSONObject response, Boolean scoring){
@@ -1109,7 +1234,7 @@ public class BoxScore extends AppCompatActivity {
         teamLogoFileName = teamLogoFileName.replace("(", "");
         teamLogoFileName = teamLogoFileName.replace(")", "");
         int drawableID = getResources().getIdentifier(teamLogoFileName, "drawable", getPackageName());
-        teamLogo.setImageResource(drawableID);
+        teamLogo.setImageResource(drawableID == 0 ? getResources().getIdentifier("nhl", "drawable", getPackageName()) : drawableID);
         teamLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
         teamLogo.setId(5*i+7);
         idToTeamName.put(5*i+7, teamLogoFileName);
