@@ -49,6 +49,7 @@ public class TeamLinkMapHelper {
         put("new_york_americans", "https://www.nhl.com");
         put("new_york_islanders", "https://www.nhl.com/islanders");
         put("new_york_rangers", "https://www.nhl.com/rangers");
+        put("oakland_seals", "https://www.nhl.com/sharks");
         put("ottawa_senators", "https://www.nhl.com/senators");
         put("ottawa_senators_1917", "https://www.nhl.com/senators");
         put("philadelphia_flyers", "https://www.nhl.com/flyers");
