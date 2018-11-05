@@ -2,6 +2,8 @@
 
 Notes for future reference:
 
+Screenshots: https://v-xiong.github.io/#nhl
+
 How to load image from url : https://stackoverflow.com/questions/5776851/load-image-from-url
 
 Getting image url from url and displaing in imageview:
