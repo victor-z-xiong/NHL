@@ -5,20 +5,14 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Typeface;
-import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
-import android.webkit.WebChromeClient;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -32,12 +26,10 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 
 public class BoxScore extends AppCompatActivity {
 
@@ -60,6 +52,8 @@ public class BoxScore extends AppCompatActivity {
         Bundle extras = getIntent().getExtras();
         final String url = extras.getString("BOX_SCORE_URL");
         gameContentUrl = url.replace("feed/live", "content");
+
+        //refreshBoxScoreData(url);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
@@ -87,15 +81,37 @@ public class BoxScore extends AppCompatActivity {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                launchBoxScore(url);
+                refreshBoxScoreData(url);
             }
         });
     }
 
-    private void launchBoxScore(String url){
+    private void refreshBoxScoreData(String url){
         Intent intent = new Intent(getApplicationContext(), BoxScore.class);
         intent.putExtra("BOX_SCORE_URL", url);
         startActivity(intent);
+        /*final String url = gameBoxScoreUrl;
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+                makeBanner(response);
+                makeMiddleLayer(response, true);
+                makeMiddleLayer(response, false);
+                makeScoringSummary(response, url);
+                makeTeamSummary(response);
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                System.out.println("Something is wrong");
+                error.printStackTrace();
+            }
+        });
+
+
+        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);*/
     }
 
     private void makeTeamSummary(JSONObject response){
@@ -935,7 +951,6 @@ public class BoxScore extends AppCompatActivity {
             replayButtonFinal.setVisibility(View.GONE);
         }
     }
-
 
     private void makeBanner(JSONObject response){
         android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(

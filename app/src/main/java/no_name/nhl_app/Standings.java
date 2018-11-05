@@ -59,6 +59,7 @@ public class Standings extends AppCompatActivity
         display.getSize(size);
         pixelWidth = size.x;
 
+        //getStandingsData(new Intent());
         Bundle extras = getIntent().getExtras();
 
         Spinner seasonChanger = findViewById(R.id.season_dropdown_list);
@@ -91,6 +92,7 @@ public class Standings extends AppCompatActivity
 
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
 
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -110,6 +112,41 @@ public class Standings extends AppCompatActivity
         intent.putExtra("SeasonToShow", season);
         intent.putExtra("PREV_SELECTION", pos);
         startActivity(intent);
+        //getStandingsData(intent);
+    }
+
+    private void getStandingsData(Intent intent){
+        Bundle extras = intent.getExtras();
+
+        Spinner seasonChanger = findViewById(R.id.season_dropdown_list);
+        setSpinner(seasonChanger);
+        seasonChanger.setSelected(false);
+        seasonChanger.setSelection(extras == null ? 0 : extras.getInt("PREV_SELECTION"),false);
+        seasonChanger.setOnItemSelectedListener(this);
+
+        String SeasonToShow = extras != null ? extras.getString("SeasonToShow") : setCurrentYear();
+
+        String SeasonToQueryAPI = SeasonToShow.substring(0,4) + SeasonToShow.substring(7);
+
+        String presentStandingsUrl = "https://statsapi.web.nhl.com/api/v1/standings?season=" + SeasonToQueryAPI;
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, presentStandingsUrl, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+                makeStandingsByDivision(response);
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                System.out.println("Something is wrong");
+                error.printStackTrace();
+            }
+        });
+
+
+        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
     }
 
     @Override
@@ -142,6 +179,7 @@ public class Standings extends AppCompatActivity
 
     private void makeStandingsByDivision(JSONObject response){
         LinearLayout standingsContent = findViewById(R.id.standings_content);
+        standingsContent.removeAllViews();
         LinearLayout easternConference = new LinearLayout(this);
         LinearLayout westernConference = new LinearLayout(this);
         easternConference.setOrientation(LinearLayout.VERTICAL);
@@ -149,7 +187,7 @@ public class Standings extends AppCompatActivity
         TextView Season = new TextView(this);
         try{
             JSONArray divisions = response.getJSONArray("records");
-            addSeasonBanner(divisions, Season, standingsContent);
+            //addSeasonBanner(divisions, Season, standingsContent);
             JSONObject division;
 
             division = divisions.getJSONObject(0);

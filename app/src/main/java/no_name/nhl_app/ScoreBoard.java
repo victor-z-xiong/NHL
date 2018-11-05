@@ -86,7 +86,10 @@ public class ScoreBoard extends AppCompatActivity
         display.getSize(size);
         pixelWidth = size.x;
 
-        customDate = getIntent().getExtras() == null ? "" : getIntent().getExtras().getString("CUSTOM_DATE");
+        Intent initialIntent = new Intent();
+        refreshData(initialIntent);
+
+        /*customDate = getIntent().getExtras() == null ? "" : getIntent().getExtras().getString("CUSTOM_DATE");
         String url = "https://statsapi.web.nhl.com/api/v1/schedule" + customDate;
 
         scoreDate = (TextView) findViewById(R.id.date_editor);
@@ -119,7 +122,7 @@ public class ScoreBoard extends AppCompatActivity
                 }, year, month-1, day);
                 datePickerDialog.show();
             }
-        });
+        });*/
 
         goBackOneD.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -132,6 +135,72 @@ public class ScoreBoard extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 goFwdOneDay();
+            }
+        });
+
+        /*JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+
+                addTextToLinearLayout(response);
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                System.out.println("Something is wrong");
+                error.printStackTrace();
+            }
+        });
+
+
+        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);*/
+
+        /*final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipelayout);
+            swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    setDate(year, month, day);
+                }
+            });*/
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    private void refreshData(Intent intent){
+        customDate = intent.getExtras() == null ? "" : intent.getExtras().getString("CUSTOM_DATE");
+        String url = "https://statsapi.web.nhl.com/api/v1/schedule" + customDate;
+
+        scoreDate = (TextView) findViewById(R.id.date_editor);
+        goBackOneD = (ImageView) findViewById(R.id.go_back_date);
+        goFwdOneD = (ImageView) findViewById(R.id.go_fwd_date);
+
+        mCurrentDate = Calendar.getInstance();
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE");
+        SimpleDateFormat monthDateFormat = new SimpleDateFormat("MMM");
+
+        String dayOfWeek = intent.getExtras() == null ? simpleDateFormat.format(mCurrentDate.getTime()) : intent.getExtras().getString("DAY_OF_WEEK");
+        String monthString = getIntent().getExtras() == null ? monthDateFormat.format(mCurrentDate.getTime()) : intent.getExtras().getString("MONTH_STRING");
+        day = intent.getExtras() == null ? mCurrentDate.get(Calendar.DAY_OF_MONTH) : Integer.parseInt(customDate.substring(14));
+        month = intent.getExtras() == null ? mCurrentDate.get(Calendar.MONTH) : Integer.parseInt(customDate.substring(11,13));
+        year = intent.getExtras() == null ? mCurrentDate.get(Calendar.YEAR) : Integer.parseInt(customDate.substring(6,10));
+
+        month = intent.getExtras() == null ? month + 1 : month;
+        scoreDate.setText(dayOfWeek+ ", " +monthString+ " " + day+" " +year);
+
+        scoreDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DatePickerDialog datePickerDialog = new DatePickerDialog(ScoreBoard.this, new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                        monthOfYear = monthOfYear+1;
+                        setDate(year, monthOfYear, dayOfMonth);
+                    }
+                }, year, month-1, day);
+                datePickerDialog.show();
             }
         });
 
@@ -152,17 +221,6 @@ public class ScoreBoard extends AppCompatActivity
 
 
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
-
-        /*final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipelayout);
-            swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                @Override
-                public void onRefresh() {
-                    setDate(year, month, day);
-                }
-            });*/
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
     }
 
     private void setDate(int year, int monthOfYear, int dayOfMonth){
@@ -182,7 +240,8 @@ public class ScoreBoard extends AppCompatActivity
         extras.putString("DAY_OF_WEEK", dayOfWeek);
         extras.putString("MONTH_STRING", monthString);
         intent.putExtras(extras);
-        startActivity(intent);
+        //startActivity(intent);
+        refreshData(intent);
     }
 
     private void launchBoxScore(int textViewID){
@@ -198,7 +257,7 @@ public class ScoreBoard extends AppCompatActivity
             int totalGames = response.getInt("totalGames");
 
             LinearLayout ll = (LinearLayout) findViewById(R.id.scoreboard_linear_layout);
-
+            ll.removeAllViews();
             if(totalGames == 0){
                 displayNoGamesMsg(ll);
             }
