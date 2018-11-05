@@ -180,6 +180,7 @@ public class BoxScore extends AppCompatActivity {
     private void addGoalieStatSummaryHeader(LinearLayout scoringSummary){
         LinearLayout tableHead = new LinearLayout(this);
         TableRow row = new TableRow(this);
+        TextView number = new TextView(this);
         TextView playerName = new TextView(this);
         TextView position = new TextView(this);
         TextView toi = new TextView(this);
@@ -192,6 +193,9 @@ public class BoxScore extends AppCompatActivity {
         TextView eSA = new TextView(this);
         TextView ppSA= new TextView(this);
         TextView eSP = new TextView(this);
+
+        number.setText("#");
+        setTitleParams(number, mainColumnSpacing(), true);
 
         playerName.setText("Name");
         setTitleParams(playerName, teamNameSpacing(), true);
@@ -230,6 +234,7 @@ public class BoxScore extends AppCompatActivity {
         eSP.setText("eS%");
         setTitleParams(eSP, mainColumnSpacing(), true);
 
+        tableHead.addView(number);
         tableHead.addView(playerName);
         tableHead.addView(position);
         tableHead.addView(toi);
@@ -250,6 +255,7 @@ public class BoxScore extends AppCompatActivity {
     private void addGoalieStatToTeamSummary(JSONObject playerObject, LinearLayout scoringSummary, int rowNum){
         LinearLayout horizontalRow = new LinearLayout(this);
         TableRow row = new TableRow(this);
+        TextView number = new TextView(this);
         TextView playerName = new TextView(this);
         TextView position = new TextView(this);
         TextView toi = new TextView(this);
@@ -268,6 +274,12 @@ public class BoxScore extends AppCompatActivity {
             JSONObject goalieStats = playerObject.getJSONObject("stats").getJSONObject("goalieStats");
             String playerUrl = playerObject.getJSONObject("person").getString("link");
             String name = playerObject.getJSONObject("person").getString("fullName");
+
+            if(playerObject.has("jerseyNumber")){
+                String jerseyNumber = playerObject.getString("jerseyNumber");
+                number.setText(jerseyNumber);
+                setTitleParams(number, mainColumnSpacing(), false);
+            }
 
             playerName.setText(name);
             setTitleParams(playerName, teamNameSpacing(), false);
@@ -320,6 +332,7 @@ public class BoxScore extends AppCompatActivity {
         }
 
         if(rowNum % 2 == 0){
+            number.setTextColor(Color.WHITE);
             playerName.setTextColor(Color.WHITE);
             position.setTextColor(Color.WHITE);
             toi.setTextColor(Color.WHITE);
@@ -335,6 +348,7 @@ public class BoxScore extends AppCompatActivity {
             row.setBackgroundColor(Color.GRAY);
         }
 
+        horizontalRow.addView(number);
         horizontalRow.addView(playerName);
         horizontalRow.addView(position);
         horizontalRow.addView(toi);
@@ -356,6 +370,7 @@ public class BoxScore extends AppCompatActivity {
     private void addTeamStatSummaryHeader(LinearLayout scoringSummary){
         LinearLayout tableHead = new LinearLayout(this);
         TableRow row = new TableRow(this);
+        TextView number = new TextView(this);
         TextView playerName = new TextView(this);
         TextView position = new TextView(this);
         TextView toi = new TextView(this);
@@ -373,6 +388,9 @@ public class BoxScore extends AppCompatActivity {
         TextView powerPlayAssists = new TextView(this);
         TextView faceOffPct = new TextView(this);
         TextView faceOffWins = new TextView(this);
+
+        number.setText("#");
+        setTitleParams(number, mainColumnSpacing(), true);
 
         playerName.setText("Name");
         setTitleParams(playerName, teamNameSpacing(), true);
@@ -426,6 +444,7 @@ public class BoxScore extends AppCompatActivity {
         faceOffWins.setText("F/O(w)");
         setTitleParams(faceOffWins, mainColumnSpacing(), true);
 
+        tableHead.addView(number);
         tableHead.addView(playerName);
         tableHead.addView(position);
         tableHead.addView(toi);
@@ -451,6 +470,7 @@ public class BoxScore extends AppCompatActivity {
     private void addPlayerStatToTeamSummary(JSONObject playerObject, LinearLayout scoringSummary, int rowNum){
         LinearLayout horizontalRow = new LinearLayout(this);
         TableRow row = new TableRow(this);
+        TextView number = new TextView(this);
         TextView playerName = new TextView(this);
         TextView position = new TextView(this);
         TextView toi = new TextView(this);
@@ -474,6 +494,12 @@ public class BoxScore extends AppCompatActivity {
             JSONObject skaterStats = playerObject.getJSONObject("stats").getJSONObject("skaterStats");
             String playerUrl = playerObject.getJSONObject("person").getString("link");
             String name = playerObject.getJSONObject("person").getString("fullName");
+
+            if(playerObject.has("jerseyNumber")){
+                String jerseyNumber = playerObject.getString("jerseyNumber");
+                number.setText(jerseyNumber);
+                setTitleParams(number, mainColumnSpacing(), false);
+            }
 
             playerName.setText(name);
             setTitleParams(playerName, teamNameSpacing(), false);
@@ -541,6 +567,7 @@ public class BoxScore extends AppCompatActivity {
         }
 
         if(rowNum % 2 == 0){
+            number.setTextColor(Color.WHITE);
             playerName.setTextColor(Color.WHITE);
             position.setTextColor(Color.WHITE);
             toi.setTextColor(Color.WHITE);
@@ -560,6 +587,7 @@ public class BoxScore extends AppCompatActivity {
             row.setBackgroundColor(Color.GRAY);
         }
 
+        horizontalRow.addView(number);
         horizontalRow.addView(playerName);
         horizontalRow.addView(position);
         horizontalRow.addView(toi);

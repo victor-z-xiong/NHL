@@ -486,6 +486,8 @@ public class Player extends AppCompatActivity {
         TextView shots = new TextView(this);
         TextView hits = new TextView(this);
         TextView plusMinus = new TextView(this);
+        TextView shotPct = new TextView(this);
+        TextView faceOffPct = new TextView(this);
 
 
         try{
@@ -536,6 +538,16 @@ public class Player extends AppCompatActivity {
 
             plusMinus.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("plusMinus")));
             setTitleParams(plusMinus, mainColumnSpacing(), false);
+
+            if(statsForYear.getJSONObject("stat").has("shotPct")){
+                shotPct.setText(Double.toString(statsForYear.getJSONObject("stat").getDouble("shotPct")));
+                setTitleParams(shotPct, mainColumnSpacing(), false);
+            }
+
+            if(statsForYear.getJSONObject("stat").has("faceOffPct")){
+                faceOffPct.setText(Double.toString(statsForYear.getJSONObject("stat").getDouble("faceOffPct")));
+                setTitleParams(faceOffPct, mainColumnSpacing(), false);
+            }
         } catch (JSONException e ){
             System.out.println("makeCareerStatRow method in player.java error");
         }
@@ -552,6 +564,8 @@ public class Player extends AppCompatActivity {
             shots.setTextColor(Color.WHITE);
             hits.setTextColor(Color.WHITE);
             plusMinus.setTextColor(Color.WHITE);
+            shotPct.setTextColor(Color.WHITE);
+            faceOffPct.setTextColor(Color.WHITE);
             row.setBackgroundColor(Color.GRAY);
         }
 
@@ -566,6 +580,8 @@ public class Player extends AppCompatActivity {
         horizontalRow.addView(shots);
         horizontalRow.addView(hits);
         horizontalRow.addView(plusMinus);
+        horizontalRow.addView(shotPct);
+        horizontalRow.addView(faceOffPct);
 
         row.addView(horizontalRow);
         statsTable.addView(row);
@@ -585,6 +601,8 @@ public class Player extends AppCompatActivity {
         TextView shots = new TextView(this);
         TextView hits = new TextView(this);
         TextView plusMinus = new TextView(this);
+        TextView shotPct = new TextView(this);
+        TextView faceOffPct = new TextView(this);
 
         year.setText("Year");
         setTitleParams(year, yearSpacing(), true);
@@ -620,6 +638,12 @@ public class Player extends AppCompatActivity {
         plusMinus.setText("+/-");
         setTitleParams(plusMinus, mainColumnSpacing(), true);
 
+        shotPct.setText("Shot%");
+        setTitleParams(shotPct, mainColumnSpacing(), true);
+
+        faceOffPct.setText("F/O%");
+        setTitleParams(faceOffPct, mainColumnSpacing(), true);
+
         tableHead.addView(year);
         tableHead.addView(league);
         tableHead.addView(team);
@@ -631,6 +655,8 @@ public class Player extends AppCompatActivity {
         tableHead.addView(shots);
         tableHead.addView(hits);
         tableHead.addView(plusMinus);
+        tableHead.addView(shotPct);
+        tableHead.addView(faceOffPct);
 
         row.addView(tableHead);
         statsTable.addView(row);
