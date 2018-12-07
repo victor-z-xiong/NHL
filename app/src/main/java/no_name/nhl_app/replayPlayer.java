@@ -16,4 +16,13 @@ public class replayPlayer extends AppCompatActivity {
         replayWindow.setWebViewClient(new WebViewClient());
         replayWindow.loadUrl(getIntent().getExtras().getString("REPLAY_URL"));
     }
+
+    @Override
+    public void onBackPressed() {
+        if(replayWindow.canGoBack()){
+            replayWindow.goBack();
+        } else{
+            super.onBackPressed();
+        }
+    }
 }

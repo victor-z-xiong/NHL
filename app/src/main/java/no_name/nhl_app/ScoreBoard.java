@@ -67,6 +67,7 @@ public class ScoreBoard extends AppCompatActivity
     ImageView goBackOneD, goFwdOneD;
     String boxScoreURL;
     int pixelWidth = 0;
+    RelativeLayout loadingPanel = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +87,7 @@ public class ScoreBoard extends AppCompatActivity
         display.getSize(size);
         pixelWidth = size.x;
 
+        loadingPanel = findViewById(R.id.loadingPanel123);
         Intent initialIntent = new Intent();
         refreshData(initialIntent);
 
@@ -209,7 +211,9 @@ public class ScoreBoard extends AppCompatActivity
             public void onResponse(JSONObject response) {
 
                 addTextToLinearLayout(response);
-
+                if(loadingPanel != null){
+                    loadingPanel.setVisibility(View.GONE);
+                }
             }
         }, new Response.ErrorListener() {
             @Override
@@ -274,12 +278,14 @@ public class ScoreBoard extends AppCompatActivity
             }*/
 
             for(int i = 0; i < totalGames * 2 ; i++){
+                //this weird stuff is to have home team on bottom of game table
+                int gameIndex = i % 2 == 0 ? i + 1 : i - 1;
                 JSONArray games = getGame(response);
-                String score = getScore(i, games);
-                String team = getTeamName(i, games);
-                String gameTime = setGameTime(getGameDate(i, games), i);
+                String score = getScore(gameIndex, games);
+                String team = getTeamName(gameIndex, games);
+                String gameTime = setGameTime(getGameDate(gameIndex, games), gameIndex);
 
-                makeGameScoreTable(ll, score, team, gameTime, i, games);
+                makeGameScoreTable(ll, score, team, gameTime, gameIndex, games);
             }
 
             copyRight.setText(toDisplay);
@@ -351,7 +357,7 @@ public class ScoreBoard extends AppCompatActivity
         row.addView(llForRow);
 
         ll.addView(row);
-        if(i % 2 == 1){
+        if(i % 2 == 0){
             TableRow gameTimeRow = new TableRow(this);
             TableRow spacerRow = new TableRow(this);
             gameTimeText = new TextView(this);
