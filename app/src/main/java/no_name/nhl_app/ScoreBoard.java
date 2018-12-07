@@ -182,7 +182,7 @@ public class ScoreBoard extends AppCompatActivity
         SimpleDateFormat monthDateFormat = new SimpleDateFormat("MMM");
 
         String dayOfWeek = intent.getExtras() == null ? simpleDateFormat.format(mCurrentDate.getTime()) : intent.getExtras().getString("DAY_OF_WEEK");
-        String monthString = getIntent().getExtras() == null ? monthDateFormat.format(mCurrentDate.getTime()) : intent.getExtras().getString("MONTH_STRING");
+        String monthString = intent.getExtras() == null ? monthDateFormat.format(mCurrentDate.getTime()) : intent.getExtras().getString("MONTH_STRING");
         day = intent.getExtras() == null ? mCurrentDate.get(Calendar.DAY_OF_MONTH) : Integer.parseInt(customDate.substring(14));
         month = intent.getExtras() == null ? mCurrentDate.get(Calendar.MONTH) : Integer.parseInt(customDate.substring(11,13));
         year = intent.getExtras() == null ? mCurrentDate.get(Calendar.YEAR) : Integer.parseInt(customDate.substring(6,10));
