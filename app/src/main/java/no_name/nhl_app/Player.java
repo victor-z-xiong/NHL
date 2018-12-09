@@ -314,13 +314,15 @@ public class Player extends AppCompatActivity {
             team.setGravity(Gravity.LEFT);
             i++;
             team.setId(5*i+7);
-            idToTeamName.put(5*i+7, formatTeamName(statsForYear.getJSONObject("team").getString("name")));
-            team.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    TeamLinkMapHelper.launchTeamSite(idToTeamName.get(view.getId()), view, view.getId());
-                }
-            });
+            if(statsForYear.has("team")){
+                idToTeamName.put(5*i+7, formatTeamName(statsForYear.getJSONObject("team").getString("name")));
+                team.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        TeamLinkMapHelper.launchTeamSite(idToTeamName.get(view.getId()), view, view.getId());
+                    }
+                });
+            }
 
 
             games.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("games")));
@@ -366,50 +368,80 @@ public class Player extends AppCompatActivity {
                 setTitleParams(shutouts, mainColumnSpacing(), false);
             }
 
-            goalsAgainstAverage.setText(new DecimalFormat("#.##").format(statsForYear.getJSONObject("stat").getDouble("goalAgainstAverage")));
-            setTitleParams(goalsAgainstAverage, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("goalAgainstAverage")){
+                goalsAgainstAverage.setText(new DecimalFormat("#.##").format(statsForYear.getJSONObject("stat").getDouble("goalAgainstAverage")));
+                setTitleParams(goalsAgainstAverage, mainColumnSpacing(), false);
+            }
 
-            savePercentage.setText(new DecimalFormat("#.###").format(statsForYear.getJSONObject("stat").getDouble("savePercentage")));
-            setTitleParams(savePercentage, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("savePercentage")){
+                savePercentage.setText(new DecimalFormat("#.###").format(statsForYear.getJSONObject("stat").getDouble("savePercentage")));
+                setTitleParams(savePercentage, mainColumnSpacing(), false);
+            }
 
-            goalsAgainst.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("goalsAgainst")));
-            setTitleParams(goalsAgainst, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("goalsAgainst")){
+                goalsAgainst.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("goalsAgainst")));
+                setTitleParams(goalsAgainst, mainColumnSpacing(), false);
+            }
 
-            shotsAgainst.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("shotsAgainst")));
-            setTitleParams(shotsAgainst, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("shotsAgainst")){
+                shotsAgainst.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("shotsAgainst")));
+                setTitleParams(shotsAgainst, mainColumnSpacing(), false);
+            }
 
-            toi.setText(statsForYear.getJSONObject("stat").getString("timeOnIce"));
-            setTitleParams(toi, yearSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("timeOnIce")){
+                toi.setText(statsForYear.getJSONObject("stat").getString("timeOnIce"));
+                setTitleParams(toi, yearSpacing(), false);
+            }
 
-            saves.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("saves")));
-            setTitleParams(saves, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("saves")){
+                saves.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("saves")));
+                setTitleParams(saves, mainColumnSpacing(), false);
+            }
 
-            ppSaves.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("powerPlaySaves")));
-            setTitleParams(ppSaves, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("powerPlaySaves")){
+                ppSaves.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("powerPlaySaves")));
+                setTitleParams(ppSaves, mainColumnSpacing(), false);
+            }
 
-            evenSaves.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("evenSaves")));
-            setTitleParams(evenSaves, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("evenSaves")){
+                evenSaves.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("evenSaves")));
+                setTitleParams(evenSaves, mainColumnSpacing(), false);
+            }
 
-            shortHandedSaves.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("shortHandedSaves")));
-            setTitleParams(shortHandedSaves, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("shortHandedSaves")){
+                shortHandedSaves.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("shortHandedSaves")));
+                setTitleParams(shortHandedSaves, mainColumnSpacing(), false);
+            }
 
-            ppSA.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("powerPlayShots")));
-            setTitleParams(ppSA, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("powerPlayShots")){
+                ppSA.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("powerPlayShots")));
+                setTitleParams(ppSA, mainColumnSpacing(), false);
+            }
 
-            shSA.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("shortHandedShots")));
-            setTitleParams(shSA, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("shortHandedShots")){
+                shSA.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("shortHandedShots")));
+                setTitleParams(shSA, mainColumnSpacing(), false);
+            }
 
-            eSA.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("evenShots")));
-            setTitleParams(eSA, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("evenShots")){
+                eSA.setText(Integer.toString(statsForYear.getJSONObject("stat").getInt("evenShots")));
+                setTitleParams(eSA, mainColumnSpacing(), false);
+            }
 
-            ppSP.setText(new DecimalFormat("#.##").format(statsForYear.getJSONObject("stat").getDouble("powerPlaySavePercentage")));
-            setTitleParams(ppSP, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("powerPlaySavePercentage")){
+                ppSP.setText(new DecimalFormat("#.##").format(statsForYear.getJSONObject("stat").getDouble("powerPlaySavePercentage")));
+                setTitleParams(ppSP, mainColumnSpacing(), false);
+            }
 
-            shSP.setText(new DecimalFormat("#.##").format(statsForYear.getJSONObject("stat").getDouble("shortHandedSavePercentage")));
-            setTitleParams(shSP, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("shortHandedSavePercentage")){
+                shSP.setText(new DecimalFormat("#.##").format(statsForYear.getJSONObject("stat").getDouble("shortHandedSavePercentage")));
+                setTitleParams(shSP, mainColumnSpacing(), false);
+            }
 
-            eSP.setText(new DecimalFormat("#.##").format(statsForYear.getJSONObject("stat").getDouble("evenStrengthSavePercentage")));
-            setTitleParams(eSP, mainColumnSpacing(), false);
+            if(statsForYear.getJSONObject("stat").has("evenStrengthSavePercentage")){
+                eSP.setText(new DecimalFormat("#.##").format(statsForYear.getJSONObject("stat").getDouble("evenStrengthSavePercentage")));
+                setTitleParams(eSP, mainColumnSpacing(), false);
+            }
 
         } catch (JSONException e){
             System.out.println("addGoalieStatToTeamSummary method Boxscore.java exception");
