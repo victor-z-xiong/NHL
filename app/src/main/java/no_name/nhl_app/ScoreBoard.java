@@ -91,41 +91,6 @@ public class ScoreBoard extends AppCompatActivity
         Intent initialIntent = new Intent();
         refreshData(initialIntent);
 
-        /*customDate = getIntent().getExtras() == null ? "" : getIntent().getExtras().getString("CUSTOM_DATE");
-        String url = "https://statsapi.web.nhl.com/api/v1/schedule" + customDate;
-
-        scoreDate = (TextView) findViewById(R.id.date_editor);
-        goBackOneD = (ImageView) findViewById(R.id.go_back_date);
-        goFwdOneD = (ImageView) findViewById(R.id.go_fwd_date);
-
-        mCurrentDate = Calendar.getInstance();
-
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE");
-        SimpleDateFormat monthDateFormat = new SimpleDateFormat("MMM");
-
-        String dayOfWeek = getIntent().getExtras() == null ? simpleDateFormat.format(mCurrentDate.getTime()) : getIntent().getExtras().getString("DAY_OF_WEEK");
-        String monthString = getIntent().getExtras() == null ? monthDateFormat.format(mCurrentDate.getTime()) : getIntent().getExtras().getString("MONTH_STRING");
-        day = getIntent().getExtras() == null ? mCurrentDate.get(Calendar.DAY_OF_MONTH) : Integer.parseInt(customDate.substring(14));
-        month = getIntent().getExtras() == null ? mCurrentDate.get(Calendar.MONTH) : Integer.parseInt(customDate.substring(11,13));
-        year = getIntent().getExtras() == null ? mCurrentDate.get(Calendar.YEAR) : Integer.parseInt(customDate.substring(6,10));
-
-        month = getIntent().getExtras() == null ? month + 1 : month;
-        scoreDate.setText(dayOfWeek+ ", " +monthString+ " " + day+" " +year);
-
-        scoreDate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                DatePickerDialog datePickerDialog = new DatePickerDialog(ScoreBoard.this, new DatePickerDialog.OnDateSetListener() {
-                    @Override
-                    public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
-                        monthOfYear = monthOfYear+1;
-                        setDate(year, monthOfYear, dayOfMonth);
-                    }
-                }, year, month-1, day);
-                datePickerDialog.show();
-            }
-        });*/
-
         goBackOneD.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -140,39 +105,13 @@ public class ScoreBoard extends AppCompatActivity
             }
         });
 
-        /*JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-
-                addTextToLinearLayout(response);
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                System.out.println("Something is wrong");
-                error.printStackTrace();
-            }
-        });
-
-
-        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);*/
-
-        /*final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipelayout);
-            swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                @Override
-                public void onRefresh() {
-                    setDate(year, month, day);
-                }
-            });*/
-
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
 
     private void refreshData(Intent intent){
-        customDate = intent.getExtras() == null ? "" : intent.getExtras().getString("CUSTOM_DATE");
-        String url = "https://statsapi.web.nhl.com/api/v1/schedule" + customDate;
+        customDate = intent.getExtras() == null ? "?" : intent.getExtras().getString("CUSTOM_DATE");
+        String url = "https://statsapi.web.nhl.com/api/v1/schedule" + customDate + (customDate == "?" ? "" : "&") + "hydrate=game(seriesSummary)";
 
         scoreDate = (TextView) findViewById(R.id.date_editor);
         goBackOneD = (ImageView) findViewById(R.id.go_back_date);
@@ -244,7 +183,6 @@ public class ScoreBoard extends AppCompatActivity
         extras.putString("DAY_OF_WEEK", dayOfWeek);
         extras.putString("MONTH_STRING", monthString);
         intent.putExtras(extras);
-        //startActivity(intent);
         refreshData(intent);
     }
 
@@ -265,17 +203,6 @@ public class ScoreBoard extends AppCompatActivity
             if(totalGames == 0){
                 displayNoGamesMsg(ll);
             }
-
-            /*for(int i = totalGames*2-1; i >=0 ; i--){
-
-                JSONArray games = getGame(response);
-                String score = getScore(i, games);
-                String team = getTeamName(i, games);
-                String gameTime = setGameTime(getGameDate(i, games), i);
-
-                makeGameScoreTable(ll, score, team, gameTime, i, games);
-
-            }*/
 
             for(int i = 0; i < totalGames * 2 ; i++){
                 //this weird stuff is to have home team on bottom of game table
@@ -300,12 +227,14 @@ public class ScoreBoard extends AppCompatActivity
 
     private void makeGameScoreTable(LinearLayout ll, String score, String team, String gameTime, int i, JSONArray games){
         TableRow row = new TableRow(this);
+        TableRow leagueRecordRow = new TableRow(this);
         LinearLayout llForRow = new LinearLayout(this);
         android.widget.LinearLayout.LayoutParams params = new android.widget.LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, 1f);
 
         TextView teamName = new TextView(this);
         TextView scoreText = new TextView(this);
+        TextView leagueRecordText = new TextView(this);
         ImageView teamLogo = new ImageView(this);
 
         String teamLogoFileName = team.toLowerCase();
@@ -351,12 +280,20 @@ public class ScoreBoard extends AppCompatActivity
         scoreText.setTextSize(24);
         scoreText.setPadding(0, 20, scoreTextRightSpace(), 0);
 
+        String leagueRecord = getTeamRecord(i, games);
+        leagueRecordText.setText(leagueRecord);
+        leagueRecordText.setTextSize(12);
+        leagueRecordText.setPadding(50+logoWidthSpacing(), pixelWidth >= 1080 ? -10 : -5, 0, 0);
+
         llForRow.addView(teamLogo);
         llForRow.addView(teamName);
         llForRow.addView(scoreText);
         row.addView(llForRow);
 
+        leagueRecordRow.addView(leagueRecordText);
+
         ll.addView(row);
+        ll.addView(leagueRecordRow);
         if(i % 2 == 0){
             TableRow gameTimeRow = new TableRow(this);
             TableRow spacerRow = new TableRow(this);
@@ -365,15 +302,20 @@ public class ScoreBoard extends AppCompatActivity
 
             switch(gameState){
                 case "Preview":
-                    gameTimeText.setText(gameTime);
+                    String detailedGameState = getDetailedGameState(i, games);
+                    String seriesSummary = getPlayoffSeriesSummary(i, games);
+                    gameTime = detailedGameState.equals("Scheduled (Time TBD)") ? "TBD" : gameTime;
+                    gameTimeText.setText(gameTime + seriesSummary);
+                    gameTimeText.setTextSize(gameTimeFontSize(seriesSummary));
                     break;
 
                 case "Live":
                     setLiveGameStateTimePeriod(new VolleyCallback() {
                         @Override
-                        public void onSuccess(String result, int idTag) {
+                        public void onSuccess(String result, int idTag, String seriesSummary) {
                             gameTimeText = findViewById(idTag);
-                            gameTimeText.setText(result);
+                            gameTimeText.setText(result + seriesSummary);
+                            gameTimeText.setTextSize(gameTimeFontSize(seriesSummary));
                         }
                     }, i, games);
 
@@ -381,20 +323,20 @@ public class ScoreBoard extends AppCompatActivity
                 default:
                     setLiveGameStateTimePeriod(new VolleyCallback() {
                         @Override
-                        public void onSuccess(String result, int idTag) {
+                        public void onSuccess(String result, int idTag, String seriesSummary) {
                             gameTimeText = findViewById(idTag);
                             if(result.indexOf("SO") > -1 || result.indexOf("OT") > -1){
-                                gameTimeText.setText(result);
+                                gameTimeText.setText(result + seriesSummary);
                             }else{
-                                gameTimeText.setText("Final");
+                                gameTimeText.setText("Final" + seriesSummary);
                             }
+                            gameTimeText.setTextSize(gameTimeFontSize(seriesSummary));
                         }
                     }, i, games);
             }
 
             gameTimeText.setId(3*i+2);
-            gameTimeText.setTextSize(18);
-            gameTimeText.setPadding(50+logoWidthSpacing(), 0, 0, 0);
+            gameTimeText.setPadding(50+logoWidthSpacing(), 5, 0, 0);
 
             spacerRow.addView(blankView);
             gameTimeRow.addView(gameTimeText);
@@ -440,6 +382,13 @@ public class ScoreBoard extends AppCompatActivity
         return 150;
     }
 
+    private int gameTimeFontSize(String gameTimeText){
+        if(pixelWidth >= 1440){
+            return gameTimeText.indexOf("|") > -1 ? 16 : 18;
+        }
+        return gameTimeText.indexOf("|") > -1 ? 14 : 18;
+    }
+
     private void setLGSTHelper(JSONObject response){
 
         try{
@@ -462,17 +411,18 @@ public class ScoreBoard extends AppCompatActivity
     }
 
     public interface VolleyCallback{
-        void onSuccess(String result, int idTag);
+        void onSuccess(String result, int idTag, String seriesSummary);
     }
 
     private void setLiveGameStateTimePeriod(final VolleyCallback callback, int i, JSONArray games){
         String url = getLiveGameFeedAndStatsLink(i, games);
+        final String seriesSummary = getPlayoffSeriesSummary(i, games);
         final int id = 3*i+2;
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 setLGSTHelper(response);
-                callback.onSuccess(getPeriodTimeRemaining() + " " + getCurrentPeriod(), id);
+                callback.onSuccess(getPeriodTimeRemaining() + " " + getCurrentPeriod(), id, seriesSummary);
                 count++;
             }
         }, new Response.ErrorListener() {
@@ -539,6 +489,31 @@ public class ScoreBoard extends AppCompatActivity
         return gameState;
     }
 
+    private String getDetailedGameState(int i, JSONArray games){
+        String gameState = "";
+        if(games != null) {
+            try {
+                gameState = games.getJSONObject(i / 2).getJSONObject("status").getString("detailedState");
+            } catch (JSONException e) {
+                System.out.println("UNEXPECTED JSON EXCEPTION!");
+            }
+        }
+        return gameState;
+    }
+
+    private String getPlayoffSeriesSummary(int i, JSONArray games){
+        String seriesSummary = "";
+        if(games != null) {
+            try {
+                JSONObject seriesSummaryObj = games.getJSONObject(i / 2).getJSONObject("seriesSummary");
+                seriesSummary = " | " + seriesSummaryObj.getString("gameLabel") + " " + seriesSummaryObj.getString("seriesStatusShort");
+            } catch (JSONException e) {
+                System.out.println("UNEXPECTED JSON EXCEPTION!");
+            }
+        }
+        return seriesSummary;
+    }
+
     private String getScore(int i, JSONArray games){
         String score = "-";
         String teamType = "away";
@@ -552,6 +527,40 @@ public class ScoreBoard extends AppCompatActivity
             }
         }
         return score;
+    }
+
+    private String getTeamRecord(int i, JSONArray games){
+        String wins = "";
+        String losses = "";
+        String ties = "";
+        String OTL = "";
+        String teamType = "away";
+        String leagueRecordString = "";
+        if(i % 2 == 0)
+            teamType = "home";
+        if(games != null) {
+            try {
+                JSONObject leagueRecord = games.getJSONObject(i / 2).getJSONObject("teams").getJSONObject(teamType).getJSONObject("leagueRecord");
+                if(leagueRecord.has("wins")){
+                    wins = Integer.toString(leagueRecord.getInt("wins"));
+                }
+                if(leagueRecord.has("losses")){
+                    losses = Integer.toString(leagueRecord.getInt("losses"));
+                }
+                if(leagueRecord.has("ties")){
+                    ties = Integer.toString(leagueRecord.getInt("ties"));
+                }
+                if(leagueRecord.has("ot")){
+                    OTL = Integer.toString(leagueRecord.getInt("ot"));
+                }
+
+                leagueRecordString = (wins.length() > 0 ? wins : "") + (losses.length() > 0 ? "-" + losses : "") +
+                        (ties.length() > 0 ? "-" + ties : "") + (OTL.length() > 0 ? "-" + OTL : "");
+            } catch (JSONException e) {
+                System.out.println("UNEXPECTED JSON EXCEPTION!");
+            }
+        }
+        return leagueRecordString;
     }
 
     private String getTeamName(int i, JSONArray games){
