@@ -652,6 +652,7 @@ public class BoxScore extends AppCompatActivity {
         try {
             JSONArray goals = response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("scoringPlays");
             JSONArray periods = response.getJSONObject("liveData").getJSONObject("linescore").getJSONArray("periods");
+            String currentPeriodOrdinal = response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodOrdinal");
             int endOfPeriod, startOfPeriod;
             LinearLayout ll = (LinearLayout) findViewById(R.id.scoring_summary);
             TableRow periodRow;
@@ -660,9 +661,6 @@ public class BoxScore extends AppCompatActivity {
             JSONArray allPlays = response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("allPlays");
             TableLayout.LayoutParams tableRowParams = new TableLayout.LayoutParams(TableLayout.LayoutParams.FILL_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
             TableLayout.LayoutParams tableRowParams2 = new TableLayout.LayoutParams(TableLayout.LayoutParams.FILL_PARENT, TableLayout.LayoutParams.WRAP_CONTENT);
-            triCodeAway = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("away").getString("triCode");
-            triCodeHome = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("home").getString("triCode");
-            //String gameDate = response.getJSONObject("gameData").getJSONObject("dateTime").getString("dateTime").substring(0,10);
             for(int j = 0; j < periods.length(); j++){
                 endOfPeriod  = 1 + response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("playsByPeriod").getJSONObject(j).getInt("endIndex");
                 startOfPeriod = response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("playsByPeriod").getJSONObject(j).getInt("startIndex");
@@ -681,7 +679,27 @@ public class BoxScore extends AppCompatActivity {
                 periodText.setTextSize(18);
                 periodText.setPadding(0,0,0,20);
 
-                makeScoringSummaryPeriod(scoringPlays, ll, periodRow, periodText, allPlays, tableRowParams, tableRowParams2, url);
+                makeScoringSummaryPeriod(scoringPlays, ll, periodRow, periodText, allPlays, tableRowParams, tableRowParams2, url, false);
+            }
+
+            if(currentPeriodOrdinal.equals("SO")){
+                endOfPeriod  = response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("playsByPeriod").getJSONObject(4).getInt("endIndex");
+                startOfPeriod = response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("playsByPeriod").getJSONObject(4).getInt("startIndex");
+                scoringPlays.clear();
+                for(int k = startOfPeriod; k <= endOfPeriod; k++){
+                    if(allPlays.getJSONObject(k).has("players")){
+                        scoringPlays.add(k);
+                        goalToEventID.put(k, allPlays.getJSONObject(k).getJSONObject("about").getInt("eventId"));
+                    }
+                }
+
+                periodRow = new TableRow(this);
+                periodText = new TextView(this);
+                periodText.setText("SO");
+                periodText.setTextSize(18);
+                periodText.setPadding(0,0,0,20);
+
+                makeScoringSummaryPeriod(scoringPlays, ll, periodRow, periodText, allPlays, tableRowParams, tableRowParams2, url, true);
             }
             if(periods.length() == 0){
                 TextView noGameYet = new TextView(this);
@@ -704,7 +722,7 @@ public class BoxScore extends AppCompatActivity {
     private void makeScoringSummaryPeriod(ArrayList<Integer> scoringPlays, LinearLayout scoringSummary,
                                           TableRow period, TextView periodText, JSONArray allPlays,
                                           TableLayout.LayoutParams tableRowParams, TableLayout.LayoutParams tableRowParams2,
-                                          String url){
+                                          String url, boolean isSO){
         LinearLayout ll = new LinearLayout(this);
         ll.setOrientation(LinearLayout.VERTICAL);
         period.addView(periodText);
@@ -743,8 +761,8 @@ public class BoxScore extends AppCompatActivity {
 
                 String triCode = playObject.getJSONObject("team").getString("triCode");
                 String description = playObject.getJSONObject("result").getString("description");
-                String typeOfGoal = typeOfGoal(description);
-                String afterAssistOne = afterAssistOne(description);
+                String typeOfGoal = typeOfGoal(description, isSO);
+                String afterAssistOne = afterAssistOne(description, isSO);
                 String afterAssistTwo = afterAssistTwo(description);
                 switch(playObject.getJSONArray("players").length()){
                     case 4:
@@ -775,7 +793,7 @@ public class BoxScore extends AppCompatActivity {
                 }
 
                 String timeOfGoal = playObject.getJSONObject("about").getString("periodTimeRemaining");
-                String strength = playObject.getJSONObject("result").getJSONObject("strength").getString("code");
+                String strength = isSO ? "EVEN" : playObject.getJSONObject("result").getJSONObject("strength").getString("code");
                 String awayGoal = Integer.toString(playObject.getJSONObject("about").getJSONObject("goals").getInt("away"));
                 String homeGoal = Integer.toString(playObject.getJSONObject("about").getJSONObject("goals").getInt("home"));
 
@@ -793,7 +811,7 @@ public class BoxScore extends AppCompatActivity {
                         launchPlayerPage(view.getId());
                     }
                 });
-                afterGoalScocerText.setText(typeOfGoal);
+                afterGoalScocerText.setText(!isSO ? typeOfGoal : " -" + typeOfGoal);
                 assistOneText.setText(assistOne);
                 assistOneText.setTextSize(assistOne.length() + assistTwo.length() > 25 && pixelWidth < 1080 ? 11 : 14);
                 assistOneText.setId(17*idMaker+35);
@@ -820,8 +838,8 @@ public class BoxScore extends AppCompatActivity {
                 afterAssistTwoText.setText(afterAssistTwo);
 
                 playTextLine2.setText(playString2);
-                assistTitleText.setText("Assists: ");
-                unassistedText.setText("unassisted");
+                assistTitleText.setText(!isSO ? "Assists: " : (isShootoutGoalPlay(playObject) ? "GOAL" : playObject.getJSONObject("result").getString("event")));
+                unassistedText.setText(!isSO ? "unassisted" : "");
 
                 replayButton.setId(17*idMaker+37);
                 putReplayURLInHashMap(17*idMaker+37, url, scoringPlays.get(i), replayButton);
@@ -847,8 +865,14 @@ public class BoxScore extends AppCompatActivity {
                 rowMidLinearLayout.addView(afterAssistTwoText);
 
                 row2LinearLayout.addView(playTextLine2);
-                if(hasHighlights){
+                if(hasHighlights && !isSO){
                     row2LinearLayout.addView(replayButton);
+                } else if(hasHighlights && isSO){
+                    rowMidLinearLayout.addView(replayButton);
+                }
+
+                if(isSO){
+                    row2.setVisibility(View.GONE);
                 }
 
                 row1.addView(row1LinearLayout);
@@ -856,8 +880,8 @@ public class BoxScore extends AppCompatActivity {
                 midRow.addView(rowMidLinearLayout);
                 tableRowParams.setMargins(20, 0,20, 0);
                 row1.setLayoutParams(tableRowParams);
-                midRow.setLayoutParams(tableRowParams);
                 tableRowParams2.setMargins(20, 0,20, 30);
+                midRow.setLayoutParams(isSO ? tableRowParams2 :  tableRowParams);
                 row2.setLayoutParams(tableRowParams2);
 
                 ll.addView(row1);
@@ -882,6 +906,15 @@ public class BoxScore extends AppCompatActivity {
         ll.addView(spacerRow);
 
         scoringSummary.addView(ll);
+    }
+
+    private boolean isShootoutGoalPlay(JSONObject playObject){
+        try{
+            return playObject.getJSONObject("result").getString("event").equals("Goal");
+        }catch(JSONException e){
+            System.out.println("isShootoutGoalPlay threw an exception");
+        }
+        return false;
     }
 
     private void launchReplay(int replayID){
@@ -975,18 +1008,38 @@ public class BoxScore extends AppCompatActivity {
             setLogo(teams.getJSONObject("away").getString("name"), awayBig);
             setLogo(teams.getJSONObject("home").getString("name"), homeBig);
 
-            timeLeft.setText(response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodOrdinal"));
+            triCodeAway = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("away").getString("triCode");
+            triCodeHome = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("home").getString("triCode");
+
+            String currentPeriodOrdinal = response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodOrdinal");
+            timeLeft.setText(currentPeriodOrdinal);
             timeLeft.setLayoutParams(params);
             periodState.setText(periodStateText);
             periodState.setTextSize(pixelWidth >= 1080 ? 14 : 11);
-            awayScore.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
-                    .getJSONObject("away").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt("goals")));
+
+            int awayGoals = response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
+                    .getJSONObject("away").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt("goals");
+
+            int homeGoals = response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
+                    .getJSONObject("home").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt("goals");
+
+            if(currentPeriodOrdinal.equals("SO") && periodStateText.equals("Final")){
+                boolean awayTeamWins = shootoutWinnerIsAwayTeam(
+                        response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("playsByPeriod").getJSONObject(4).getInt("endIndex"),
+                        response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("playsByPeriod").getJSONObject(4).getInt("startIndex"),
+                        response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("allPlays"));
+                if(awayTeamWins){
+                    awayGoals++;
+                }else{
+                    homeGoals++;
+                }
+            }
+            awayScore.setText(Integer.toString(awayGoals));
             awayScore.setTextSize(pixelWidth >= 1080 ? 18 : 16);
             awayScore.setLayoutParams(params);
             awayScore.setGravity(Gravity.CENTER);
             awayScore.setTypeface(null, Typeface.BOLD);
-            homeScore.setText(Integer.toString(response.getJSONObject("liveData").getJSONObject("boxscore").getJSONObject("teams")
-                    .getJSONObject("home").getJSONObject("teamStats").getJSONObject("teamSkaterStats").getInt("goals")));
+            homeScore.setText(Integer.toString(homeGoals));
             homeScore.setTextSize(pixelWidth >= 1080 ? 18 : 16);
             homeScore.setLayoutParams(params);
             homeScore.setGravity(Gravity.CENTER);
@@ -1000,6 +1053,29 @@ public class BoxScore extends AppCompatActivity {
             System.out.println("makeBanner JSON exception BoxScore.java");
             hideHighlightsLayout();
         }
+    }
+
+    private boolean shootoutWinnerIsAwayTeam(int endOfPeriod, int startOfPeriod, JSONArray allPlays)
+    {
+        try{
+            int awaySOGoal = 0;
+            int homeSOGoal = 0;
+            for(int k = startOfPeriod; k <= endOfPeriod; k++){
+                JSONObject playObject = allPlays.getJSONObject(k);
+                if(playObject.has("players") && isShootoutGoalPlay(playObject)){
+                    if(playObject.getJSONObject("team").getString("triCode").equals(triCodeAway)){
+                        awaySOGoal++;
+                    }else{
+                        homeSOGoal++;
+                    }
+                }
+            }
+            return awaySOGoal > homeSOGoal;
+        }catch(JSONException e){
+            System.out.println("shootoutWinnerIsAwayTeam threw an exception");
+        }
+
+        return false;
     }
 
     private void hideHighlightsLayout(){
@@ -1333,14 +1409,22 @@ public class BoxScore extends AppCompatActivity {
         return goalScorer;
     }
 
-    private String typeOfGoal(String description){
+    private String typeOfGoal(String description, boolean isSO){
+        if(isSO){
+            if(description.indexOf('-') > -1){
+                return description.substring(description.indexOf('-')+1);
+            }
+            description = description.substring(description.indexOf(' ')+1);
+            description = description.substring(description.indexOf(' '));
+            return description;
+        }
         description = afterGoalScorer(description);
         return description.substring(0, description.indexOf(','));
     }
 
-    private String afterAssistOne(String description) {
+    private String afterAssistOne(String description, boolean isSO) {
         description = removeBracket(description);
-        if(description.length() > 0) {
+        if(description.length() > 0 && !isSO) {
             description = description.substring(description.indexOf(':'));
             int startIndex = description.indexOf('(') - 1;
             int endIndex = description.indexOf(',') + 2;

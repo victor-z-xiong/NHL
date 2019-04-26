@@ -57,12 +57,15 @@ public class Player extends AppCompatActivity {
                 error.printStackTrace();
             }
         });
-        String careerStatsUrl = "https://statsapi.web.nhl.com/api/v1/people/"+playerId+"?expand=person.stats&stats=yearByYear";
+        String careerStatsUrl = "https://statsapi.web.nhl.com/api/v1/people/"+playerId+"?expand=person.stats&stats=yearByYear,careerRegularSeason,yearByYearPlayoffs,careerPlayoffs";
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, careerStatsUrl, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
 
-                setPlayerCareerStats(response);
+                setPlayerCareerStatsTotal(response, 1, R.id.last_row);
+                setPlayerCareerStats(response, 0, R.id.player_career_stats_table);
+                setPlayerCareerStatsTotal(response, 3, R.id.last_row_playoffs);                  //for playoffs
+                setPlayerCareerStats(response, 2, R.id.player_career_stats_table_playoffs);      //for playoffs
 
             }
         }, new Response.ErrorListener() {
@@ -73,33 +76,17 @@ public class Player extends AppCompatActivity {
             }
         });
 
-        String careerStatsTotalUrl = "https://statsapi.web.nhl.com/api/v1/people/"+playerId+"/stats/?stats=careerRegularSeason";
-        JsonObjectRequest jsonObjectRequest3 = new JsonObjectRequest(Request.Method.GET, careerStatsTotalUrl, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-
-                setPlayerCareerStatsTotal(response);
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                System.out.println("Something is wrong");
-                error.printStackTrace();
-            }
-        });
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest2);
-        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest3);
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
     }
 
-    private void setPlayerCareerStatsTotal(JSONObject response){
+    private void setPlayerCareerStatsTotal(JSONObject response, int statIndex, int layoutId){
 
-        LinearLayout statsTable = (LinearLayout) findViewById(R.id.last_row);
+        LinearLayout statsTable = (LinearLayout) findViewById(layoutId);
         try{
-            JSONArray statsYearByYear = response.getJSONArray("stats").getJSONObject(0).getJSONArray("splits");
+            JSONArray statsYearByYear = response.getJSONArray("people").getJSONObject(0)
+                    .getJSONArray("stats").getJSONObject(statIndex).getJSONArray("splits");
 
-            String goals = statsYearByYear.getJSONObject(0).getJSONObject("stat").getString("goals");
             makeCareerStatRow(statsYearByYear.getJSONObject(0), statsTable, true, 1);
         }catch (JSONException e){
             try{
@@ -112,11 +99,16 @@ public class Player extends AppCompatActivity {
         }
     }
 
-    private void setPlayerCareerStats(JSONObject response){
+    private void setPlayerCareerStats(JSONObject response, int statIndex, int layoutId){
         try{
             JSONArray statsYearByYear = response.getJSONArray("people").getJSONObject(0)
-                    .getJSONArray("stats").getJSONObject(0).getJSONArray("splits");
-            LinearLayout statsTable = (LinearLayout) findViewById(R.id.player_career_stats_table);
+                    .getJSONArray("stats").getJSONObject(statIndex).getJSONArray("splits");
+            LinearLayout statsTable = (LinearLayout) findViewById(layoutId);
+
+            if(statsYearByYear.length() == 0){
+                TextView playoffStatsText = (TextView) findViewById(R.id.Playoffs);
+                playoffStatsText.setVisibility(View.GONE);
+            }
 
             JSONObject player = response.getJSONArray("people").getJSONObject(0);
             String position = player.getJSONObject("primaryPosition").getString("abbreviation");
