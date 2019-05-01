@@ -764,32 +764,32 @@ public class BoxScore extends AppCompatActivity {
                 String typeOfGoal = typeOfGoal(description, isSO);
                 String afterAssistOne = afterAssistOne(description, isSO);
                 String afterAssistTwo = afterAssistTwo(description);
-                switch(playObject.getJSONArray("players").length()){
-                    case 4:
-                        goalScorer = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("fullName");
-                        assistOne = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("fullName");
-                        assistTwo = playObject.getJSONArray("players").getJSONObject(2).getJSONObject("player").getString("fullName");
-                        goalScorerUrl = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("link");
-                        assistOneUrl = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("link");
-                        assistTwoUrl = playObject.getJSONArray("players").getJSONObject(2).getJSONObject("player").getString("link");
-                        break;
-                    case 3:
-                        goalScorer = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("fullName");
-                        assistOne = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("fullName");
-                        assistTwo = "";
-                        goalScorerUrl = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("link");
-                        assistOneUrl = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("link");
-                        assistTwoUrl = "";
-                        break;
-                    default:
-                        goalScorer = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("fullName");
-                        assistOne = "";
-                        assistTwo = "";
-                        goalScorerUrl = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("link");
-                        assistOneUrl = "";
-                        assistTwoUrl = "";
-                        unassisted = true;
-                        break;
+                int numPlayersInPlay = playObject.getJSONArray("players").length();
+                boolean isEmptyNetPlay = playObject.getJSONObject("result").getString("emptyNet") == "true";
+                if((numPlayersInPlay == 4 && !isEmptyNetPlay) || (numPlayersInPlay == 3 && isEmptyNetPlay)) {
+                    goalScorer = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("fullName");
+                    assistOne = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("fullName");
+                    assistTwo = playObject.getJSONArray("players").getJSONObject(2).getJSONObject("player").getString("fullName");
+                    goalScorerUrl = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("link");
+                    assistOneUrl = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("link");
+                    assistTwoUrl = playObject.getJSONArray("players").getJSONObject(2).getJSONObject("player").getString("link");
+                }
+                else if ((numPlayersInPlay == 3 && !isEmptyNetPlay) || (numPlayersInPlay == 2 && isEmptyNetPlay)) {
+                    goalScorer = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("fullName");
+                    assistOne = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("fullName");
+                    assistTwo = "";
+                    goalScorerUrl = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("link");
+                    assistOneUrl = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("link");
+                    assistTwoUrl = "";
+                }
+                else{
+                    goalScorer = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("fullName");
+                    assistOne = "";
+                    assistTwo = "";
+                    goalScorerUrl = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("link");
+                    assistOneUrl = "";
+                    assistTwoUrl = "";
+                    unassisted = true;
                 }
 
                 String timeOfGoal = playObject.getJSONObject("about").getString("periodTimeRemaining");
