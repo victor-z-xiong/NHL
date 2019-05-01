@@ -652,7 +652,8 @@ public class BoxScore extends AppCompatActivity {
         try {
             JSONArray goals = response.getJSONObject("liveData").getJSONObject("plays").getJSONArray("scoringPlays");
             JSONArray periods = response.getJSONObject("liveData").getJSONObject("linescore").getJSONArray("periods");
-            String currentPeriodOrdinal = response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodOrdinal");
+            String currentPeriodOrdinal = response.getJSONObject("liveData").getJSONObject("linescore").has("currentPeriodOrdinal") ?
+                    response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodOrdinal") : "";
             int endOfPeriod, startOfPeriod;
             LinearLayout ll = (LinearLayout) findViewById(R.id.scoring_summary);
             TableRow periodRow;
@@ -701,6 +702,7 @@ public class BoxScore extends AppCompatActivity {
 
                 makeScoringSummaryPeriod(scoringPlays, ll, periodRow, periodText, allPlays, tableRowParams, tableRowParams2, url, true);
             }
+            
             if(periods.length() == 0){
                 TextView noGameYet = new TextView(this);
                 noGameYet.setText("Game has yet to start!");
