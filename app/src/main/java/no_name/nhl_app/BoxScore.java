@@ -53,8 +53,20 @@ public class BoxScore extends AppCompatActivity {
         final String url = extras.getString("BOX_SCORE_URL");
         gameContentUrl = url.replace("feed/live", "content");
 
-        //refreshBoxScoreData(url);
+        refreshBoxScoreData(url);
 
+        final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipelayout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshBoxScoreData(url);
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+    }
+
+    private void refreshBoxScoreData(String paramUrl){
+        final String url = paramUrl;
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -64,7 +76,6 @@ public class BoxScore extends AppCompatActivity {
                 makeMiddleLayer(response, false);
                 makeScoringSummary(response, url);
                 makeTeamSummary(response);
-
             }
         }, new Response.ErrorListener() {
             @Override
@@ -76,42 +87,6 @@ public class BoxScore extends AppCompatActivity {
 
 
         GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
-
-        final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipelayout);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refreshBoxScoreData(url);
-            }
-        });
-    }
-
-    private void refreshBoxScoreData(String url){
-        Intent intent = new Intent(getApplicationContext(), BoxScore.class);
-        intent.putExtra("BOX_SCORE_URL", url);
-        startActivity(intent);
-        /*final String url = gameBoxScoreUrl;
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-
-                makeBanner(response);
-                makeMiddleLayer(response, true);
-                makeMiddleLayer(response, false);
-                makeScoringSummary(response, url);
-                makeTeamSummary(response);
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                System.out.println("Something is wrong");
-                error.printStackTrace();
-            }
-        });
-
-
-        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);*/
     }
 
     private void makeTeamSummary(JSONObject response){
@@ -656,6 +631,10 @@ public class BoxScore extends AppCompatActivity {
                     response.getJSONObject("liveData").getJSONObject("linescore").getString("currentPeriodOrdinal") : "";
             int endOfPeriod, startOfPeriod;
             LinearLayout ll = (LinearLayout) findViewById(R.id.scoring_summary);
+            int numChildren = ll.getChildCount();
+            if(numChildren > 12){
+                ll.removeViews(12, numChildren - 12);  // for refreshing the box score
+            }                                                    // 12 is number of children in scoring summary view on first load of box score
             TableRow periodRow;
             TextView periodText;
             String periodString;
@@ -1007,8 +986,8 @@ public class BoxScore extends AppCompatActivity {
 
             JSONObject gameData = response.getJSONObject("gameData");
             JSONObject teams = gameData.getJSONObject("teams");
-            setLogo(teams.getJSONObject("away").getString("name"), awayBig);
-            setLogo(teams.getJSONObject("home").getString("name"), homeBig);
+            setLogo(teams.getJSONObject("away").getString("name"), awayBig, R.id.away_banner_logo);
+            setLogo(teams.getJSONObject("home").getString("name"), homeBig, R.id.home_banner_logo);
 
             triCodeAway = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("away").getString("triCode");
             triCodeHome = response.getJSONObject("gameData").getJSONObject("teams").getJSONObject("home").getString("triCode");
@@ -1191,6 +1170,9 @@ public class BoxScore extends AppCompatActivity {
         LinearLayout head = findViewById(scoring ? R.id.Header_box_score : R.id.Header_shot_total);
         LinearLayout away = findViewById(scoring ? R.id.away_box_score : R.id.away_shot_total);
         LinearLayout home = findViewById(scoring ? R.id.home_box_score : R.id.home_shot_total);
+        head.removeViews(0, head.getChildCount());
+        away.removeViews(0, away.getChildCount());
+        home.removeViews(0, home.getChildCount());
         TextView headText = new TextView(this);
         headText.setText("Team");
         headText.setTextSize(18);
@@ -1201,8 +1183,8 @@ public class BoxScore extends AppCompatActivity {
         try {
             JSONObject gameData = response.getJSONObject("gameData");
             JSONObject teams = gameData.getJSONObject("teams");
-            setLogo(teams.getJSONObject("away").getString("name"), awaySmall);
-            setLogo(teams.getJSONObject("home").getString("name"), homeSmall);
+            setLogo(teams.getJSONObject("away").getString("name"), awaySmall, 0);
+            setLogo(teams.getJSONObject("home").getString("name"), homeSmall, 0);
             awaySmall.setLayoutParams(params);
             homeSmall.setLayoutParams(params);
             away.addView(awaySmall);
@@ -1346,8 +1328,9 @@ public class BoxScore extends AppCompatActivity {
     }
 
     HashMap<Integer, String> idToTeamName = new HashMap<Integer, String>();
-    private void setLogo(String team, ImageView teamLogo){
+    private void setLogo(String team, ImageView teamLogo, int logoId){
         i++;
+        int id = logoId == 0 ? 5 * i + 7 : logoId;
         String teamLogoFileName = team.toLowerCase();
         teamLogoFileName = teamLogoFileName.replace(" ", "_");
         teamLogoFileName = teamLogoFileName.replace("é", "e");
@@ -1357,8 +1340,8 @@ public class BoxScore extends AppCompatActivity {
         int drawableID = getResources().getIdentifier(teamLogoFileName, "drawable", getPackageName());
         teamLogo.setImageResource(drawableID == 0 ? getResources().getIdentifier("nhl", "drawable", getPackageName()) : drawableID);
         teamLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        teamLogo.setId(5*i+7);
-        idToTeamName.put(5*i+7, teamLogoFileName);
+        teamLogo.setId(logoId);
+        idToTeamName.put(logoId, teamLogoFileName);
         teamLogo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
