@@ -86,15 +86,13 @@ public class Player extends AppCompatActivity {
         try{
             JSONArray statsYearByYear = response.getJSONArray("people").getJSONObject(0)
                     .getJSONArray("stats").getJSONObject(statIndex).getJSONArray("splits");
-
-            makeCareerStatRow(statsYearByYear.getJSONObject(0), statsTable, true, 1);
-        }catch (JSONException e){
-            try{
-                JSONArray statsYearByYear = response.getJSONArray("stats").getJSONObject(0).getJSONArray("splits");
+            String position = response.getJSONArray("people").getJSONObject(0).getJSONObject("primaryPosition").getString("abbreviation");
+            if(position.equals("G")){
                 makeGoalieCareerStatRow(statsYearByYear.getJSONObject(0), statsTable, true, 1);
-            }catch(JSONException exception){
-                System.out.println("setPlayerCareerStatsTotal method in Player.java error when making goalie total stats");
+            }else{
+                makeCareerStatRow(statsYearByYear.getJSONObject(0), statsTable, true, 1);
             }
+        }catch (JSONException e){
             System.out.println("setPlayerCareerStatsTotal method in Player.java error");
         }
     }
