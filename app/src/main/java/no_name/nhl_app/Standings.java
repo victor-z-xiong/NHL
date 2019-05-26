@@ -161,14 +161,24 @@ public class Standings extends AppCompatActivity
 
             division = divisions.getJSONObject(0);
             if(division.getJSONObject("conference") != null){
-                addConferenceBanner("Eastern Conference", easternConference);
-                addConferenceBanner("Western Conference", westernConference);
+                if(division.getJSONObject("conference").getString("name").equals("Clarence Campbell") ||
+                        division.getJSONObject("conference").getString("name").equals("Prince of Wales")){
+                    addConferenceBanner("Prince of Wales", easternConference);
+                    addConferenceBanner("Clarence Campbell", westernConference);
+                }else{
+                    addConferenceBanner("Eastern Conference", easternConference);
+                    addConferenceBanner("Western Conference", westernConference);
+                }
 
                 for(int i = 0; i < divisions.length(); i++){
                     division = divisions.getJSONObject(i);
                     if(division.getJSONObject("conference").getString("name").equals("Eastern")){
                         makeDivisionLayout(division, easternConference);
-                    }else{
+                    }else if (division.getJSONObject("conference").getString("name").equals("Prince of Wales")){
+                        makeDivisionLayout(division, easternConference);
+                    }else if (division.getJSONObject("conference").getString("name").equals("Clarence Campbell")){
+                        makeDivisionLayout(division, westernConference);
+                    }else {
                         makeDivisionLayout(division, westernConference);
                     }
                 }
