@@ -46,6 +46,7 @@ public class Player extends AppCompatActivity {
         JsonObjectRequest jsonObjectRequest2 = new JsonObjectRequest(Request.Method.GET, profileUrl, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
+                setProfileActionShot(response);
                 setProfilePicture(response);
                 setPlayerProfile(response);
 
@@ -753,6 +754,16 @@ public class Player extends AppCompatActivity {
 
         }catch (JSONException e){
             System.out.println("Something wrong");
+        }
+    }
+
+    private void setProfileActionShot(JSONObject response){
+        try{
+            int id = response.getJSONArray("people").getJSONObject(0).getInt("id");
+            String imageLink = "https://nhl.bamcontent.com/images/actionshots/" + Integer.toString(id) + ".jpg";
+            Picasso.get().load(imageLink).into((ImageView) findViewById(R.id.profile_action_pic));
+        }catch (JSONException e){
+            System.out.println("setProfileActionShot in Player.java error");
         }
     }
 
