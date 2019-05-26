@@ -59,39 +59,14 @@ public class Standings extends AppCompatActivity
         display.getSize(size);
         pixelWidth = size.x;
 
-        //getStandingsData(new Intent());
         Bundle extras = getIntent().getExtras();
 
         Spinner seasonChanger = findViewById(R.id.season_dropdown_list);
         setSpinner(seasonChanger);
         seasonChanger.setSelected(false);
-        seasonChanger.setSelection(extras == null ? 0 : extras.getInt("PREV_SELECTION"),false);
         seasonChanger.setOnItemSelectedListener(this);
 
-        String SeasonToShow = extras != null ? extras.getString("SeasonToShow") : setCurrentYear();
-
-        String SeasonToQueryAPI = SeasonToShow.substring(0,4) + SeasonToShow.substring(7);
-
-        String presentStandingsUrl = "https://statsapi.web.nhl.com/api/v1/standings?season=" + SeasonToQueryAPI;
-
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, presentStandingsUrl, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-
-                makeStandingsByDivision(response);
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                System.out.println("Something is wrong");
-                error.printStackTrace();
-            }
-        });
-
-
-        GetScoresREST.getInstance().addToRequestQueue(jsonObjectRequest);
-
+        getStandingsData(new Intent(), seasonChanger);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -111,24 +86,19 @@ public class Standings extends AppCompatActivity
         Intent intent = new Intent(getApplicationContext(), Standings.class);
         intent.putExtra("SeasonToShow", season);
         intent.putExtra("PREV_SELECTION", pos);
-        startActivity(intent);
-        //getStandingsData(intent);
+        getStandingsData(intent, (Spinner) findViewById(R.id.season_dropdown_list));
     }
 
-    private void getStandingsData(Intent intent){
+    private void getStandingsData(Intent intent, Spinner seasonChanger){
         Bundle extras = intent.getExtras();
 
-        Spinner seasonChanger = findViewById(R.id.season_dropdown_list);
-        setSpinner(seasonChanger);
-        seasonChanger.setSelected(false);
         seasonChanger.setSelection(extras == null ? 0 : extras.getInt("PREV_SELECTION"),false);
-        seasonChanger.setOnItemSelectedListener(this);
 
         String SeasonToShow = extras != null ? extras.getString("SeasonToShow") : setCurrentYear();
 
         String SeasonToQueryAPI = SeasonToShow.substring(0,4) + SeasonToShow.substring(7);
 
-        String presentStandingsUrl = "https://statsapi.web.nhl.com/api/v1/standings?season=" + SeasonToQueryAPI;
+        String presentStandingsUrl = "https://statsapi.web.nhl.com/api/v1/standings?hydrate=record(overall)&season=" + SeasonToQueryAPI;
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, presentStandingsUrl, null, new Response.Listener<JSONObject>() {
             @Override
@@ -187,7 +157,6 @@ public class Standings extends AppCompatActivity
         TextView Season = new TextView(this);
         try{
             JSONArray divisions = response.getJSONArray("records");
-            //addSeasonBanner(divisions, Season, standingsContent);
             JSONObject division;
 
             division = divisions.getJSONObject(0);
@@ -255,21 +224,6 @@ public class Standings extends AppCompatActivity
         title.setTypeface(null, Typeface.BOLD);
         conferenceRow.addView(title);
         conference.addView(conferenceRow);
-    }
-
-    private void addSeasonBanner(JSONArray divisions, TextView Season, LinearLayout standingsContent){
-        LinearLayout titleLayout = findViewById(R.id.season);
-        TableRow SeasonRow = new TableRow(this);
-        try{
-            String presentSeason = divisions.length() == 0 ? "20042005" : divisions.getJSONObject(0).getString("season");
-            Season.setText(presentSeason.substring(0,4) + " - " + presentSeason.substring(4) + " Season");
-            Season.setTypeface(null, Typeface.BOLD);
-            SeasonRow.addView(Season);
-            titleLayout.addView(SeasonRow);
-            //standingsContent.addView(titleLayout);
-        } catch (JSONException e) {
-            System.out.println("addSeasonBanner JSON Exception");
-        }
     }
 
     private void makeDivisionLayout(JSONObject division, LinearLayout asd){
@@ -341,6 +295,7 @@ public class Standings extends AppCompatActivity
         TextView GF = new TextView(this);
         TextView diff = new TextView(this);
         TextView streak = new TextView(this);
+        TextView l10Record = new TextView(this);
 
         try{
             if(!madePlayOffs){
@@ -381,23 +336,50 @@ public class Standings extends AppCompatActivity
             points.setText(team.getString("points"));
             setTitleParams(points, mainColumnSpacing(), false);
 
-            ROW.setText(team.getString("row"));
+            if(team.has("row")){
+                ROW.setText(team.getString("row"));
+            }
             setTitleParams(ROW, mainColumnSpacing(), false);
 
-            int goalsAgainst = Integer.parseInt(team.getString("goalsAgainst"));
-            int goalsFor = Integer.parseInt(team.getString("goalsScored"));
-            int difference = goalsFor - goalsAgainst;
-            GA.setText(team.getString("goalsAgainst"));
+            if(team.has("goalsAgainst") && team.has("goalsScored")){
+                int goalsAgainst = Integer.parseInt(team.getString("goalsAgainst"));
+                int goalsFor = Integer.parseInt(team.getString("goalsScored"));
+                int difference = goalsFor - goalsAgainst;
+                GA.setText(team.getString("goalsAgainst"));
+
+                GF.setText(team.getString("goalsScored"));
+
+                diff.setText(Integer.toString(difference));
+            }
             setTitleParams(GA, mainColumnSpacing(), false);
-
-            GF.setText(team.getString("goalsScored"));
             setTitleParams(GF, mainColumnSpacing(), false);
-
-            diff.setText(Integer.toString(difference));
             setTitleParams(diff,  mainColumnSpacing(), false);
 
-            streak.setText(team.getJSONObject("streak").getString("streakCode"));
+            if(team.has("streak")){
+                streak.setText(team.getJSONObject("streak").getString("streakCode"));
+            }
             setTitleParams(streak, mainColumnSpacing(), false);
+
+            String l10w ="";
+            String l10l = "";
+            String l10tie = "";
+            String l10otl = "";
+            if(team.has("records")){
+                JSONObject l10recordObj = team.getJSONObject("records").getJSONArray("overallRecords").getJSONObject(3);
+                if(l10recordObj.getString("type").equals("lastTen")){
+                     l10w = l10recordObj.getString("wins");
+                     l10l = l10recordObj.getString("losses");
+                     if(l10recordObj.has("ties")){
+                         l10tie = l10recordObj.getString("ties");
+                     }
+                     if(l10recordObj.has("ot")){
+                         l10otl = l10recordObj.getString("ot");
+                     }
+                }
+                String l10RecordText = l10tie.equals("") ? l10w + "-" + l10l + "-" + l10otl : l10w + "-" + l10l + "-" + l10tie;
+                l10Record.setText(l10RecordText);
+            }
+            setTitleParams(l10Record, l10Spacing(), false);
         } catch (JSONException e) {
             System.out.println("makeTeamRow JSON Exception");
         }
@@ -414,10 +396,11 @@ public class Standings extends AppCompatActivity
         }
         tableHead.addView(points);
         tableHead.addView(ROW);
-        tableHead.addView(GA);
         tableHead.addView(GF);
+        tableHead.addView(GA);
         tableHead.addView(diff);
         tableHead.addView(streak);
+        tableHead.addView(l10Record);
     }
 
     private void addTeamStatsHeader(LinearLayout divisionContent, boolean hasTies){
@@ -437,6 +420,7 @@ public class Standings extends AppCompatActivity
         TextView GF = new TextView(this);
         TextView diff = new TextView(this);
         TextView streak = new TextView(this);
+        TextView l10Record = new TextView(this);
 
         rank.setText("Rank");
         setTitleParams(rank, mainColumnSpacing(), true);
@@ -482,6 +466,9 @@ public class Standings extends AppCompatActivity
         streak.setText("STRK");
         setTitleParams(streak, mainColumnSpacing(), true);
 
+        l10Record.setText("L10");
+        setTitleParams(l10Record, l10Spacing(), true);
+
         tableHead.addView(rank);
         tableHead.addView(team);
         tableHead.addView(clinched);
@@ -494,10 +481,11 @@ public class Standings extends AppCompatActivity
         }
         tableHead.addView(points);
         tableHead.addView(ROW);
-        tableHead.addView(GA);
         tableHead.addView(GF);
+        tableHead.addView(GA);
         tableHead.addView(diff);
         tableHead.addView(streak);
+        tableHead.addView(l10Record);
 
         row.addView(tableHead);
         divisionContent.addView(row);
@@ -523,6 +511,19 @@ public class Standings extends AppCompatActivity
         }
 
         return 75;
+    }
+
+    private int l10Spacing(){
+
+        if(pixelWidth >= 1440){
+            return 200;
+        }else if (pixelWidth >= 1080){
+            return 150;
+        }else if (pixelWidth >= 720) {
+            return 100;
+        }
+
+        return 100;
     }
 
     HashMap<Integer, String> idToTeamName = new HashMap<Integer, String>();
