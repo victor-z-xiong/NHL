@@ -746,7 +746,7 @@ public class BoxScore extends AppCompatActivity {
                 String afterAssistOne = afterAssistOne(description, isSO);
                 String afterAssistTwo = afterAssistTwo(description);
                 int numPlayersInPlay = playObject.getJSONArray("players").length();
-                boolean isEmptyNetPlay = playObject.getJSONObject("result").getString("emptyNet") == "true";
+                boolean isEmptyNetPlay = isSO ? false : playObject.getJSONObject("result").getString("emptyNet") == "true";
                 if((numPlayersInPlay == 4 && !isEmptyNetPlay) || (numPlayersInPlay == 3 && isEmptyNetPlay)) {
                     goalScorer = playObject.getJSONArray("players").getJSONObject(0).getJSONObject("player").getString("fullName");
                     assistOne = playObject.getJSONArray("players").getJSONObject(1).getJSONObject("player").getString("fullName");
