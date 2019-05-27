@@ -18,6 +18,7 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -26,6 +27,7 @@ import org.json.JSONObject;
 
 import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Player extends AppCompatActivity {
 
@@ -757,11 +759,22 @@ public class Player extends AppCompatActivity {
         }
     }
 
+    Boolean imageNotLoaded = true;
     private void setProfileActionShot(JSONObject response){
         try{
             int id = response.getJSONArray("people").getJSONObject(0).getInt("id");
             String imageLink = "https://nhl.bamcontent.com/images/actionshots/" + Integer.toString(id) + ".jpg";
-            Picasso.get().load(imageLink).into((ImageView) findViewById(R.id.profile_action_pic));
+            final AtomicBoolean loaded = new AtomicBoolean();
+            Picasso.get().load(imageLink).into((ImageView) findViewById(R.id.profile_action_pic), new Callback.EmptyCallback() {
+                @Override public void onSuccess() {
+                    loaded.set(true);
+                }
+            });
+            if (loaded.get() && !imageNotLoaded) {
+                imageNotLoaded = false;
+                ImageView actionShot = (ImageView) findViewById(R.id.profile_action_pic);
+                actionShot.setVisibility(View.GONE);
+            }
         }catch (JSONException e){
             System.out.println("setProfileActionShot in Player.java error");
         }
