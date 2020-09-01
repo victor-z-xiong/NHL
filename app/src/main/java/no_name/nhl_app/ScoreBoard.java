@@ -172,9 +172,10 @@ public class ScoreBoard extends AppCompatActivity
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEEE");
         SimpleDateFormat monthDateFormat = new SimpleDateFormat("MMM");
-        Date date = new Date(year, dayOfMonth < 2? monthOfYear : monthOfYear-1, dayOfMonth-1);
-        String dayOfWeek = simpleDateFormat.format(date);
-        String monthString = monthDateFormat.format(date);
+        Date dayDate = new Date(year, monthOfYear-1, dayOfMonth-1);
+        Date monthDate = new Date(year, monthOfYear-1, dayOfMonth == 1? dayOfMonth : dayOfMonth-1);
+        String dayOfWeek = simpleDateFormat.format(dayDate);
+        String monthString = monthDateFormat.format(monthDate);
         customDate = "?date="+year+"-"+customMonth+"-"+customDay;
 
         Intent intent = new Intent(getApplicationContext(), ScoreBoard.class);
@@ -675,6 +676,7 @@ public class ScoreBoard extends AppCompatActivity
                 month = day == 1? month-1 : month;
                 day = day == 1? 31: day-1;
                 break;
+            case 8:
             case 9:
                 month = day == 1? month-1 : month;
                 day = day == 1? 31: day-1;
