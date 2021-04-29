@@ -751,7 +751,7 @@ public class Player extends AppCompatActivity {
     private void setProfilePicture(JSONObject response){
         try{
             int id = response.getJSONArray("people").getJSONObject(0).getInt("id");
-            String imageLink = "https://nhl.bamcontent.com/images/headshots/current/168x168/" + Integer.toString(id) + ".jpg";
+            String imageLink = "http://nhl.bamcontent.com/images/headshots/current/168x168/" + Integer.toString(id) + ".jpg";
             Picasso.get().load(imageLink).into((ImageView) findViewById(R.id.profile_pic));
 
         }catch (JSONException e){
@@ -763,7 +763,7 @@ public class Player extends AppCompatActivity {
     private void setProfileActionShot(JSONObject response){
         try{
             int id = response.getJSONArray("people").getJSONObject(0).getInt("id");
-            String imageLink = "https://nhl.bamcontent.com/images/actionshots/" + Integer.toString(id) + ".jpg";
+            String imageLink = "http://nhl.bamcontent.com/images/actionshots/" + Integer.toString(id) + ".jpg";
             final AtomicBoolean loaded = new AtomicBoolean();
             Picasso.get().load(imageLink).into((ImageView) findViewById(R.id.profile_action_pic), new Callback.EmptyCallback() {
                 @Override public void onSuccess() {
