@@ -950,7 +950,7 @@ public class BoxScore extends AppCompatActivity {
                     String type = keywords.getJSONObject(j).getString("type");
                     if(type.equals("statsEventId")){
                         if(Integer.parseInt(keywords.getJSONObject(j).getString("value")) == eventId){
-                            String replayURL = items.getJSONObject(i).getJSONArray("playbacks").getJSONObject(9).getString("url");
+                            String replayURL = items.getJSONObject(i).getJSONArray("playbacks").getJSONObject(3).getString("url");
                             idToReplayURL.put(replayId, replayURL);
                             replayFound = true;
                         }
@@ -1098,8 +1098,8 @@ public class BoxScore extends AppCompatActivity {
             JSONArray epg = gameContentResponse.getJSONObject("media").getJSONArray("epg");
             JSONObject extendedHighlights = getExtendedHighlights(epg);
             JSONObject recap = getRecap(epg);
-            extendedHighlightsUrl = extendedHighlights.getJSONArray("items").getJSONObject(0).getJSONArray("playbacks").getJSONObject(9).getString("url");
-            recapUrl = recap.getJSONArray("items").getJSONObject(0).getJSONArray("playbacks").getJSONObject(9).getString("url");
+            extendedHighlightsUrl = extendedHighlights.getJSONArray("items").getJSONObject(0).getJSONArray("playbacks").getJSONObject(3).getString("url");
+            recapUrl = recap.getJSONArray("items").getJSONObject(0).getJSONArray("playbacks").getJSONObject(3).getString("url");
 
             recapTextView.setOnClickListener(new View.OnClickListener() {
                 @Override
